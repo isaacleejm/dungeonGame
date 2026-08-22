@@ -15,21 +15,25 @@ type Game struct {
 	mirrorGame       MirrorGame
 	SingleAttack     SingleAttack
 	multiSwordAttack [10]*Sword
+	multiSwordAttackSprite *ebiten.Image
+	blocks 					*Block
 }
 
 func (g *Game) Update() error {
+	g.blocks.Update(150, 150)
 	inputState := g.input.Poll(g.player.Center())
-	g.player.Update(inputState)
-	g.enemy.Update(g.player)
+	g.enemy.Update(g.player, *g.blocks)
+	g.player.Update(inputState, *g.blocks)
 
 	g.SingleAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
 
 	if inputState.StartArrayAttack && g.player.SpellState == MirrorState {
 		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
 	}
+
 	g.mirrorGame.Update()
 
-	if inputState.StartAttack && g.player.SpellState == SwordState {
+	if inputState.StartArrayAttack && g.player.SpellState == SwordState {
 		for _, sword := range g.multiSwordAttack {
 			if sword.Shoot(g.player.Center(), g.player.Rotation) {
 				break
@@ -48,6 +52,7 @@ func (g *Game) Update() error {
 			}
 		}
 	}
+
 	for _, sword := range g.multiSwordAttack {
 		sword.Update()
 		// Sword Collision with Enemy
@@ -67,6 +72,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.enemy.Draw(screen)
 	g.mirrorGame.Draw(screen)
 	g.SingleAttack.Draw(screen)
+	g.blocks.Draw(screen)
+
 	for _, sword := range g.multiSwordAttack {
 		sword.Draw(screen)
 	}
@@ -117,6 +124,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+
+
 	player := NewPlayer(
 		screenWidthValue,
 		screenHeightValue,
@@ -138,6 +147,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	dungeonBlockSprite, _, err := ebitenutil.NewImageFromFile("assets/dungeon-block.png")
 
 	mirrorImage := ebiten.NewImage(50, 2)
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
@@ -169,7 +180,12 @@ func main() {
 			rotation:      player.Rotation,
 			startRotation: player.Rotation,
 		},
-		multiSwordAttack: multiSwordAttack,
+		multiSwordAttackSprite: multiSwordAttackSprite,
+		multiSwordAttack:       multiSwordAttack,
+		blocks: &Block{
+			Pos: Vector2{50, 50},
+			Sprite: dungeonBlockSprite,
+		},
 	}
 
 	if err := ebiten.RunGame(game); err != nil {

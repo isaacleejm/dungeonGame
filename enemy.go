@@ -90,7 +90,10 @@ func (e *Enemy) CollidesWithPoint(pos Vector2) bool {
 		pos.Y <= c.Y2
 }
 
-func (e *Enemy) Update(p *Player) {
+func (e *Enemy) Update(p *Player, block Block) {
+	blockedX := false
+	blockedY := false
+
 	playerPos := p.Pos
 	enemyPos := e.Pos
 
@@ -103,8 +106,28 @@ func (e *Enemy) Update(p *Player) {
 		return
 	}
 
-	e.Pos.X += (dx / distance) * e.Speed
-	e.Pos.Y += (dy / distance) * e.Speed
+	moveX := (dx / distance) * e.Speed
+	moveY := (dy / distance) * e.Speed
+
+	e.Pos.X += moveX
+
+	if Collides(e.CollisionBounds(), block.CollisionBounds()) {
+		blockedX = true
+	}
+
+	if blockedX {
+		e.Pos.X -= moveX
+	}
+
+	e.Pos.Y += moveY
+
+	if Collides(e.CollisionBounds(), block.CollisionBounds()) {
+		blockedY = true
+	}
+
+	if blockedY {
+		e.Pos.Y -= moveY
+	}
 }
 
 func (e *Enemy) Draw(screen *ebiten.Image) {

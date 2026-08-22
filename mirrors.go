@@ -157,16 +157,16 @@ func (m *MirrorGame) Draw(screen *ebiten.Image) {
 			scaleX := dist / beamWidth
 
 			op := &ebiten.DrawImageOptions{}
-			
+
 			// Offset Y by half height so the beam rotates exactly on its center line
 			op.GeoM.Translate(0, -beamHeight/2)
-			
+
 			// Stretch the beam horizontally to the exact distance
 			op.GeoM.Scale(scaleX, 0.2)
-			
+
 			// Rotate to face the next mirror
 			op.GeoM.Rotate(angle)
-			
+
 			// Move to the start point (Mirror A)
 			op.GeoM.Translate(A.X, A.Y)
 
