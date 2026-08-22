@@ -8,19 +8,21 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+const MAX_SWORDS int = 10
+const MAX_ENEMIES int = 10
+
 type Game struct {
 	input            *InputManager
 	player           *Player
-	enemy            *Enemy
+	enemies          [MAX_ENEMIES]*Enemy
 	mirrorGame       MirrorGame
 	SingleAttack     SingleAttack
-	multiSwordAttack [10]*Sword
+	multiSwordAttack [MAX_SWORDS]*Sword
 }
 
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState)
-	g.enemy.Update(g.player)
 
 	g.SingleAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
 
@@ -48,12 +50,17 @@ func (g *Game) Update() error {
 			}
 		}
 	}
+	for _, enemy := range g.enemies {
+		enemy.Update(g.player)
+	}
 	for _, sword := range g.multiSwordAttack {
 		sword.Update()
 		// Sword Collision with Enemy
-		if g.enemy.Alive && sword.Active && g.enemy.CollidesWithPoint(sword.Center()) {
-			sword.Active = false
-			g.enemy.Alive = false
+		for _, enemy := range g.enemies {
+			if enemy.Alive && sword.Active && enemy.CollidesWithPoint(sword.Center()) {
+				sword.Active = false
+				// enemy.Alive = false
+			}
 		}
 	}
 
@@ -64,9 +71,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Background color
 	screen.Fill(color.RGBA{30, 30, 46, 0xff})
 	g.player.Draw(screen)
-	g.enemy.Draw(screen)
 	g.mirrorGame.Draw(screen)
 	g.SingleAttack.Draw(screen)
+	for _, enemy := range g.enemies {
+		enemy.Draw(screen)
+	}
 	for _, sword := range g.multiSwordAttack {
 		sword.Draw(screen)
 	}
@@ -125,15 +134,6 @@ func main() {
 		swordSprite,
 	)
 
-	enemy := NewEnemy(
-		screenWidthValue,
-		screenHeightValue,
-		1.0,
-		enemySprite,
-		player,
-		true,
-	)
-
 	beamSprite, _, err := ebitenutil.NewImageFromFile("assets/beam.png")
 	if err != nil {
 		log.Fatal(err)
@@ -142,23 +142,20 @@ func main() {
 	mirrorImage := ebiten.NewImage(50, 2)
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
-	multiSwordAttack := [10]*Sword{
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
+	multiSwordAttack := [MAX_SWORDS]*Sword{}
+	for i := range multiSwordAttack {
+		multiSwordAttack[i] = NewSword(5, multiSwordAttackSprite, player, false, 0)
+	}
+
+	enemies := [MAX_ENEMIES]*Enemy{}
+	for i := range enemies {
+		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, 1.0, enemySprite, player, true)
 	}
 
 	game := &Game{
 		input:      NewInputManager(deadzone),
 		player:     player,
-		enemy:      enemy,
+		enemies:    enemies,
 		mirrorGame: NewMirrorGame(beamSprite),
 		SingleAttack: SingleAttack{
 			attackState:   NotAttacking,
