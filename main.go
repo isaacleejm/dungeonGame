@@ -39,7 +39,12 @@ func main() {
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Turtlezard")
 
-	mirrorWizard, _, err := ebitenutil.NewImageFromFile("assets/mirror-wizard.png")
+	mirrorSprite, _, err := ebitenutil.NewImageFromFile("assets/mirror-wizard.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	swordSprite, _, err := ebitenutil.NewImageFromFile("assets/sword-wizard.png")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +55,8 @@ func main() {
 			screenWidthValue,
 			screenHeightValue,
 			speed,
-			mirrorWizard,
+			mirrorSprite,
+			swordSprite,
 		),
 	}
 

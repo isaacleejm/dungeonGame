@@ -11,27 +11,40 @@ type InputState struct {
 	MoveY        float64
 	TargetAngle  float64
 	HasAngleLock bool // True if aiming with mouse or moving stick
+	ToggleSpell  bool // True for a single frame on button press
 }
 
 type InputManager struct {
 	gamepadIDs   []ebiten.GamepadID
 	deadzone     float64
 	lastMousePos Vector2
+	toggleBinding ActionBinding
 }
 
 func NewInputManager(deadzone float64) *InputManager {
-	return &InputManager{deadzone: deadzone}
+	return &InputManager{
+		deadzone: deadzone,
+		toggleBinding: ActionBinding{
+			Key:            ebiten.KeySpace,
+			StandardButton: ebiten.StandardGamepadButtonRightBottom, // A
+			RawButtonIndex: 0,
+		},
+	}
 }
 
 func (im *InputManager) Poll(playerCenter Vector2) InputState {
 	im.gamepadIDs = ebiten.AppendGamepadIDs(im.gamepadIDs[:0])
-	if len(im.gamepadIDs) == 0 {
+	hasGamepad := len(im.gamepadIDs) > 0
+
+	if !hasGamepad {
 		return im.pollKBM(playerCenter)
 	}
 
 	var state InputState
 
 	id := im.gamepadIDs[0]
+	state.ToggleSpell = im.toggleBinding.JustPressedGamepad(id)
+
 	var rawX, rawY float64
 
 	if ebiten.IsStandardGamepadLayoutAvailable(id) {
@@ -62,7 +75,11 @@ func (im *InputManager) Poll(playerCenter Vector2) InputState {
 // / Keyboard and mouse controls. The player aims towards the cursor,
 // independent of WASD movement
 func (im *InputManager) pollKBM(playerCenter Vector2) InputState {
+	// WASD movement
 	var state InputState
+
+	state.ToggleSpell = im.toggleBinding.JustPressedKey()
+
 	var kx, ky float64
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
 		ky -= 1.0
@@ -82,6 +99,7 @@ func (im *InputManager) pollKBM(playerCenter Vector2) InputState {
 		state.MoveY = ky
 	}
 
+	// Cursor aiming
 	mx, my := ebiten.CursorPosition()
 	currentMouse := Vector2{X: float64(mx), Y: float64(my)}
 
