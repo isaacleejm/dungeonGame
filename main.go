@@ -13,8 +13,8 @@ type Game struct {
 	player                 *Player
 	enemy                  *Enemy
 	mirrorGame             MirrorGame
-	SingleAttack SingleAttack
-	multiSwordAttack       [5]*Sword
+	SingleAttack           SingleAttack
+	multiSwordAttack       [10]*Sword
 	multiSwordAttackSprite *ebiten.Image
 }
 
@@ -30,8 +30,14 @@ func (g *Game) Update() error {
 	}
 	g.mirrorGame.Update()
 	if inputState.StartArrayAttack && g.player.SpellState == SwordState {
+		count := 0
 		for _, sword := range g.multiSwordAttack {
-			sword.Shoot(g.player.Center(), g.player.Rotation)
+			if sword.Shoot(g.player.Center(), g.player.Rotation) {
+				count++
+			}
+			if count > 4 {
+				break
+			}
 		}
 	}
 	for _, sword := range g.multiSwordAttack {
@@ -127,7 +133,12 @@ func main() {
 	mirrorImage := ebiten.NewImage(50, 2)
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
-	multiSwordAttack := [5]*Sword{
+	multiSwordAttack := [10]*Sword{
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
 		NewSword(5, multiSwordAttackSprite, player, false, 0),
 		NewSword(5, multiSwordAttackSprite, player, false, 0),
 		NewSword(5, multiSwordAttackSprite, player, false, 0),
@@ -136,17 +147,17 @@ func main() {
 	}
 
 	game := &Game{
-		input:                  NewInputManager(deadzone),
-		player:                 player,
-		enemy:                  enemy,
-		mirrorGame:             NewMirrorGame(beamSprite),
+		input:      NewInputManager(deadzone),
+		player:     player,
+		enemy:      enemy,
+		mirrorGame: NewMirrorGame(beamSprite),
 		SingleAttack: SingleAttack{
-			attackState: NotAttacking,
-			SwordSprite: swordAttackSprite,
-			BeamSprite: beamAttackSprite,
-			pos: player.Pos,
-			startPos: player.Pos,
-			rotation: player.Rotation,
+			attackState:   NotAttacking,
+			SwordSprite:   swordAttackSprite,
+			BeamSprite:    beamAttackSprite,
+			pos:           player.Pos,
+			startPos:      player.Pos,
+			rotation:      player.Rotation,
 			startRotation: player.Rotation,
 		},
 		multiSwordAttackSprite: multiSwordAttackSprite,

@@ -28,9 +28,9 @@ func NewSword(speed float64, sprite *ebiten.Image, player *Player, active bool, 
 	}
 }
 
-func (s *Sword) Shoot(position Vector2, direction float64) {
+func (s *Sword) Shoot(position Vector2, direction float64) bool {
 	if s.Active {
-		return
+		return false
 	}
 
 	const spread = math.Pi / 6 // 30 degrees
@@ -39,6 +39,7 @@ func (s *Sword) Shoot(position Vector2, direction float64) {
 	s.Rotation = direction + (rand.Float64()*2-1)*spread
 	s.Lifetime = 60
 	s.Active = true
+	return true
 }
 
 func (s *Sword) Center() Vector2 {
