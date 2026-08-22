@@ -53,6 +53,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	swordAttackSprite, _, err := ebitenutil.NewImageFromFile("assets/sword.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	enemySprite, _, err := ebitenutil.NewImageFromFile("assets/enemyRed.png")
 	if err != nil {
 		log.Fatal(err)
@@ -64,6 +69,10 @@ func main() {
 		speed,
 		mirrorSprite,
 		swordSprite,
+		&SwordAttack{
+			attackState: NotAttacking,
+			Sprite: swordAttackSprite,
+		},
 	)
 
 	enemy := NewEnemy(
