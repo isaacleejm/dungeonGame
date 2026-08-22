@@ -64,7 +64,6 @@ func (g *Game) UpdateLevel() {
 
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
-	g.enemy.Update(g.player, g.blocks)
 	g.player.Update(inputState, g.blocks)
 
 	g.beamAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
