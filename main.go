@@ -11,17 +11,34 @@ import (
 type Game struct {
 	input  *InputManager
 	player *Player
+	enemy  *Enemy
 }
 
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState)
+	if g.enemy == nil {
+		enemySprite, _, err := ebitenutil.NewImageFromFile("assets/enemyRed.png")
+		if err != nil {
+			log.Fatal(err)
+		}
+		g.enemy = NewEnemy(
+			screenWidthValue,
+			screenHeightValue,
+			1.0,
+			enemySprite,
+			g.player,
+		)
+	}
+	g.enemy.Update(g.player)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// Background color
 	screen.Fill(color.RGBA{30, 30, 46, 0xff})
 	g.player.Draw(screen)
+	g.enemy.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -58,6 +75,7 @@ func main() {
 			mirrorSprite,
 			swordSprite,
 		),
+		enemy: nil,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {

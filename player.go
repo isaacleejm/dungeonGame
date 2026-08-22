@@ -13,10 +13,6 @@ const (
 	SwordState
 )
 
-type Vector2 struct {
-	X, Y float64
-}
-
 type Player struct {
 	Pos          Vector2
 	Rotation     float64
@@ -41,7 +37,7 @@ func NewPlayer(
 		Pos:          Vector2{X: startX, Y: startY},
 		Speed:        speed,
 		MirrorSprite: mirrorSprite,
-		SwordSprite: swordSprite,
+		SwordSprite:  swordSprite,
 	}
 }
 
@@ -60,10 +56,10 @@ func (p *Player) Update(input InputState) {
 
 	if input.ToggleSpell {
 		switch p.SpellState {
-			case MirrorState:
-				p.SpellState = SwordState
-			case SwordState:
-				p.SpellState = MirrorState
+		case MirrorState:
+			p.SpellState = SwordState
+		case SwordState:
+			p.SpellState = MirrorState
 		}
 	}
 
@@ -86,9 +82,9 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(p.Pos.X+width/2, p.Pos.Y+height/2)
 
 	switch p.SpellState {
-		case MirrorState:
-			screen.DrawImage(p.MirrorSprite, op)
-		case SwordState:
-			screen.DrawImage(p.SwordSprite, op)
+	case MirrorState:
+		screen.DrawImage(p.MirrorSprite, op)
+	case SwordState:
+		screen.DrawImage(p.SwordSprite, op)
 	}
 }
