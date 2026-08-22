@@ -9,31 +9,18 @@ import (
 )
 
 type Game struct {
-	input  *InputManager
-	player *Player
-	enemy  *Enemy
-	mirrorGame MirrorGame
+	input                  *InputManager
+	player                 *Player
+	enemy                  *Enemy
+	mirrorGame             MirrorGame
 	SingleAttack SingleAttack
+	multiSwordAttack       [5]*Sword
+	multiSwordAttackSprite *ebiten.Image
 }
 
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState)
-
-	if g.enemy == nil {
-		enemySprite, _, err := ebitenutil.NewImageFromFile("assets/enemyRed.png")
-		if err != nil {
-			log.Fatal(err)
-		}
-		g.enemy = NewEnemy(
-			screenWidthValue,
-			screenHeightValue,
-			1.0,
-			enemySprite,
-			g.player,
-		)
-	}
-
 	g.enemy.Update(g.player)
 
 	g.SingleAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
@@ -42,6 +29,18 @@ func (g *Game) Update() error {
 		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
 	}
 	g.mirrorGame.Update()
+	if inputState.StartArrayAttack && g.player.SpellState == SwordState {
+		for _, sword := range g.multiSwordAttack {
+			sword.Shoot(g.player.Center(), g.player.Rotation)
+		}
+	}
+	for _, sword := range g.multiSwordAttack {
+		sword.Update()
+		if g.enemy.Alive && sword.Active && g.enemy.CollidesWithPoint(sword.Center()) {
+			sword.Active = false
+			g.enemy.Alive = false
+		}
+	}
 
 	return nil
 }
@@ -53,6 +52,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.enemy.Draw(screen)
 	g.mirrorGame.Draw(screen)
 	g.SingleAttack.Draw(screen)
+	for _, sword := range g.multiSwordAttack {
+		sword.Draw(screen)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -60,14 +62,14 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 const (
-	screenWidthValue  = 320
-	screenHeightValue = 240
+	screenWidthValue  = 1000
+	screenHeightValue = 750
 	speed             = 4.0
 	deadzone          = 0.2 // Ignores minor stick drift
 )
 
 func main() {
-	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowSize(1000, 750)
 	ebiten.SetWindowTitle("Turtlezard")
 
 	mirrorSprite, _, err := ebitenutil.NewImageFromFile("assets/mirror-wizard.png")
@@ -95,6 +97,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	multiSwordAttackSprite, _, err := ebitenutil.NewImageFromFile("assets/sword.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	player := NewPlayer(
 		screenWidthValue,
 		screenHeightValue,
@@ -109,6 +116,7 @@ func main() {
 		1.0,
 		enemySprite,
 		player,
+		true,
 	)
 
 	beamSprite, _, err := ebitenutil.NewImageFromFile("assets/beam.png")
@@ -119,11 +127,19 @@ func main() {
 	mirrorImage := ebiten.NewImage(50, 2)
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
+	multiSwordAttack := [5]*Sword{
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+	}
+
 	game := &Game{
-		input:  NewInputManager(deadzone),
-		player: player,
-		enemy:  enemy,
-		mirrorGame: NewMirrorGame(beamSprite),
+		input:                  NewInputManager(deadzone),
+		player:                 player,
+		enemy:                  enemy,
+		mirrorGame:             NewMirrorGame(beamSprite),
 		SingleAttack: SingleAttack{
 			attackState: NotAttacking,
 			SwordSprite: swordAttackSprite,
@@ -133,6 +149,8 @@ func main() {
 			rotation: player.Rotation,
 			startRotation: player.Rotation,
 		},
+		multiSwordAttackSprite: multiSwordAttackSprite,
+		multiSwordAttack:       multiSwordAttack,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {

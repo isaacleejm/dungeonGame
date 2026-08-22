@@ -7,21 +7,21 @@ import (
 )
 
 type InputState struct {
-	MoveX        float64
-	MoveY        float64
-	TargetAngle  float64
-	HasAngleLock bool // True if aiming with mouse or moving stick
-	ToggleSpell  bool // True for a single frame on button press
-	StartAttack bool
+	MoveX            float64
+	MoveY            float64
+	TargetAngle      float64
+	HasAngleLock     bool // True if aiming with mouse or moving stick
+	ToggleSpell      bool // True for a single frame on button press
+	StartAttack      bool
 	StartArrayAttack bool
 }
 
 type InputManager struct {
-	gamepadIDs   []ebiten.GamepadID
-	deadzone     float64
-	lastMousePos Vector2
-	toggleBinding ActionBinding
-	attackBinding ActionBinding
+	gamepadIDs         []ebiten.GamepadID
+	deadzone           float64
+	lastMousePos       Vector2
+	toggleBinding      ActionBinding
+	attackBinding      ActionBinding
 	arrayAttackBinding ActionBinding
 }
 
@@ -34,12 +34,12 @@ func NewInputManager(deadzone float64) *InputManager {
 			RawButtonIndex: 0,
 		},
 		attackBinding: ActionBinding{
-			Key: ebiten.KeyK,
-			StandardButton: ebiten.StandardGamepadButtonRightRight,
+			Key:            ebiten.KeyK,
+			StandardButton: ebiten.StandardGamepadButtonRightTop,
 			RawButtonIndex: 1,
 		},
 		arrayAttackBinding: ActionBinding{
-			Key: ebiten.KeyF,
+			Key:            ebiten.KeyF,
 			StandardButton: ebiten.StandardGamepadButtonRightRight,
 			RawButtonIndex: 2,
 		},
