@@ -8,13 +8,15 @@ import (
 )
 
 type Enemy struct {
-	Pos      Vector2
-	Rotation float64
-	Speed    float64
-	Sprite   *ebiten.Image
+	Pos       Vector2
+	Rotation  float64
+	Speed     float64
+	Sprite    *ebiten.Image
+	Alive     bool
+	Collision Vector4
 }
 
-func NewEnemy(screenWidth, screenHeight int, speed float64, sprite *ebiten.Image, player *Player) *Enemy {
+func NewEnemy(screenWidth, screenHeight int, speed float64, sprite *ebiten.Image, player *Player, alive bool) *Enemy {
 	enemyBounds := sprite.Bounds()
 
 	enemyWidth := float64(enemyBounds.Dx())
@@ -52,6 +54,13 @@ func NewEnemy(screenWidth, screenHeight int, speed float64, sprite *ebiten.Image
 		Pos:    Vector2{X: startX, Y: startY},
 		Speed:  speed,
 		Sprite: sprite,
+		Alive:  alive,
+		Collision: Vector4{
+			X1: 0,
+			X2: enemyWidth,
+			Y1: 0,
+			Y2: enemyHeight,
+		},
 	}
 }
 
@@ -61,6 +70,24 @@ func (e *Enemy) Center() Vector2 {
 		X: e.Pos.X + float64(bounds.Dx())/2,
 		Y: e.Pos.Y + float64(bounds.Dy())/2,
 	}
+}
+
+func (e *Enemy) CollisionBounds() Vector4 {
+	return Vector4{
+		X1: e.Pos.X + e.Collision.X1,
+		X2: e.Pos.X + e.Collision.X2,
+		Y1: e.Pos.Y + e.Collision.Y1,
+		Y2: e.Pos.Y + e.Collision.Y2,
+	}
+}
+
+func (e *Enemy) CollidesWithPoint(pos Vector2) bool {
+	c := e.CollisionBounds()
+
+	return pos.X >= c.X1 &&
+		pos.X <= c.X2 &&
+		pos.Y >= c.Y1 &&
+		pos.Y <= c.Y2
 }
 
 func (e *Enemy) Update(p *Player) {
@@ -81,6 +108,9 @@ func (e *Enemy) Update(p *Player) {
 }
 
 func (e *Enemy) Draw(screen *ebiten.Image) {
+	if !e.Alive {
+		return
+	}
 	bounds := e.Sprite.Bounds()
 	width, height := float64(bounds.Dx()), float64(bounds.Dy())
 
