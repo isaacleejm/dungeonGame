@@ -13,7 +13,7 @@ type Game struct {
 	player           *Player
 	enemy            *Enemy
 	mirrorGame       MirrorGame
-	SingleAttack     SingleAttack
+	beamAttack     	 BeamAttack
 	multiSwordAttack [10]*Sword
 	multiSwordAttackSprite *ebiten.Image
 	blocks 					*Block
@@ -25,15 +25,15 @@ func (g *Game) Update() error {
 	g.enemy.Update(g.player, *g.blocks)
 	g.player.Update(inputState, *g.blocks)
 
-	g.SingleAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
+	g.beamAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
 
 	if inputState.StartArrayAttack && g.player.SpellState == MirrorState {
-		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
+		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation, *g.blocks)
 	}
 
 	g.mirrorGame.Update()
 
-	if inputState.StartArrayAttack && g.player.SpellState == SwordState {
+	if inputState.StartAttack && g.player.SpellState == SwordState {
 		for _, sword := range g.multiSwordAttack {
 			if sword.Shoot(g.player.Center(), g.player.Rotation) {
 				break
@@ -54,9 +54,9 @@ func (g *Game) Update() error {
 	}
 
 	for _, sword := range g.multiSwordAttack {
-		sword.Update()
+		sword.Update(*g.blocks)
 		// Sword Collision with Enemy
-		if g.enemy.Alive && sword.Active && g.enemy.CollidesWithPoint(sword.Center()) {
+		if g.enemy.Alive && sword.Active && Collides(g.enemy.CollisionBounds(), sword.CollisionBounds()) {
 			sword.Active = false
 			g.enemy.Alive = false
 		}
@@ -71,7 +71,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.player.Draw(screen)
 	g.enemy.Draw(screen)
 	g.mirrorGame.Draw(screen)
-	g.SingleAttack.Draw(screen)
+	g.beamAttack.Draw(screen)
 	g.blocks.Draw(screen)
 
 	for _, sword := range g.multiSwordAttack {
@@ -119,13 +119,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	multiSwordAttackSprite, _, err := ebitenutil.NewImageFromFile("assets/sword.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-
-
 	player := NewPlayer(
 		screenWidthValue,
 		screenHeightValue,
@@ -154,16 +147,16 @@ func main() {
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
 	multiSwordAttack := [10]*Sword{
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
-		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
+		NewSword(5, swordAttackSprite, player, false, 0),
 	}
 
 	game := &Game{
@@ -171,16 +164,15 @@ func main() {
 		player:     player,
 		enemy:      enemy,
 		mirrorGame: NewMirrorGame(beamSprite),
-		SingleAttack: SingleAttack{
+		beamAttack: BeamAttack{
 			attackState:   NotAttacking,
-			SwordSprite:   swordAttackSprite,
 			BeamSprite:    beamAttackSprite,
 			pos:           player.Pos,
 			startPos:      player.Pos,
 			rotation:      player.Rotation,
 			startRotation: player.Rotation,
 		},
-		multiSwordAttackSprite: multiSwordAttackSprite,
+		multiSwordAttackSprite: swordAttackSprite,
 		multiSwordAttack:       multiSwordAttack,
 		blocks: &Block{
 			Pos: Vector2{50, 50},

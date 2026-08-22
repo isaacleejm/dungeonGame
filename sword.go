@@ -62,12 +62,30 @@ func (s *Sword) Center() Vector2 {
 	}
 }
 
-func (s *Sword) Update() {
+func (s *Sword) CollisionBounds() Vector4{
+	bounds := s.Sprite.Bounds()
+
+	return Vector4{
+		X1: s.Pos.X,
+		Y1: s.Pos.Y,
+		X2: s.Pos.X + float64(bounds.Dx()),
+		Y2: s.Pos.Y + float64(bounds.Dy()),
+	}
+}
+
+func (s *Sword) Update(block Block) {
 	if !s.Active {
 		return
 	}
-	s.Pos.X += math.Cos(s.Rotation) * s.Speed
-	s.Pos.Y += math.Sin(s.Rotation) * s.Speed
+	moveX := math.Cos(s.Rotation) * s.Speed
+	moveY := math.Sin(s.Rotation) * s.Speed
+
+	s.Pos.X += moveX
+	s.Pos.Y += moveY
+
+	if Collides(s.CollisionBounds(), block.CollisionBounds()) {
+		s.Active = false
+	}
 
 	s.Lifetime--
 

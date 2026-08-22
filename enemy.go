@@ -72,22 +72,15 @@ func (e *Enemy) Center() Vector2 {
 	}
 }
 
-func (e *Enemy) CollisionBounds() Vector4 {
+func (e *Enemy) CollisionBounds() Vector4{
+	bounds := e.Sprite.Bounds()
+
 	return Vector4{
-		X1: e.Pos.X + e.Collision.X1,
-		X2: e.Pos.X + e.Collision.X2,
-		Y1: e.Pos.Y + e.Collision.Y1,
-		Y2: e.Pos.Y + e.Collision.Y2,
+		X1: e.Center().X,
+		Y1: e.Center().Y,
+		X2: e.Center().X + float64(bounds.Dx()),
+		Y2: e.Center().Y + float64(bounds.Dy()),
 	}
-}
-
-func (e *Enemy) CollidesWithPoint(pos Vector2) bool {
-	c := e.CollisionBounds()
-
-	return pos.X >= c.X1 &&
-		pos.X <= c.X2 &&
-		pos.Y >= c.Y1 &&
-		pos.Y <= c.Y2
 }
 
 func (e *Enemy) Update(p *Player, block Block) {

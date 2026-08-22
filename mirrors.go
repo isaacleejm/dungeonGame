@@ -61,6 +61,20 @@ func NewMirrorGame(beamSprite *ebiten.Image) MirrorGame {
 	}
 }
 
+func (m *Mirror) CollisionBounds() Vector4 {
+	bounds := m.Sprite.Bounds()
+
+	w := float64(bounds.Dx())
+	h := float64(bounds.Dy())
+
+	return Vector4{
+		X1: m.Pos.X - w/2,
+		Y1: m.Pos.Y - h/2,
+		X2: m.Pos.X + w/2,
+		Y2: m.Pos.Y + h/2,
+	}
+}
+
 func (m *MirrorGame) Update() {
 	if m.BeamState == ActiveBeam && m.TimerTicks > 0 {
 		m.TimerTicks--
@@ -73,7 +87,7 @@ func (m *MirrorGame) Update() {
 }
 
 /// Parameters come from the Player
-func (m *MirrorGame) Cast(center Vector2, theta float64) {
+func (m *MirrorGame) Cast(center Vector2, theta float64, block Block) {
 	// Clear previous mirrors (todo: replace old ones gradually)
 	m.Mirrors = make([]Mirror, 0)
 
@@ -100,24 +114,46 @@ func (m *MirrorGame) Cast(center Vector2, theta float64) {
 			X: center.X + (sideX * radius) + (fwdX * leftForwardOffset),
 			Y: center.Y + (sideY * radius) + (fwdY * leftForwardOffset),
 		}
-		m.Mirrors = append(m.Mirrors, Mirror{
+		leftMirror := Mirror{
 			Pos: leftPos,
 			Rotation: theta,
 			Sprite:   m.Sprite,
-		})
-		m.BeamNodes = append(m.BeamNodes, leftPos)
+		}
+
+		blockedLeft := false
+
+		if Collides(leftMirror.CollisionBounds(), block.CollisionBounds()){
+			blockedLeft = true
+			break
+		}
+
+		if !blockedLeft {
+			m.Mirrors = append(m.Mirrors, leftMirror)
+			m.BeamNodes = append(m.BeamNodes, leftPos)
+		}
 
 		// Right Row
 		rightPos := Vector2{
 			X: center.X - (sideX * radius) + (fwdX * rightForwardOffset),
 			Y: center.Y - (sideY * radius) + (fwdY * rightForwardOffset),
 		}
-		m.Mirrors = append(m.Mirrors, Mirror{
+		rightMirror := Mirror{
 			Pos: rightPos,
 			Rotation: theta,
 			Sprite:   m.Sprite,
-		})
-		m.BeamNodes = append(m.BeamNodes, rightPos)
+		}
+
+		blockedRight := false
+
+		if Collides(rightMirror.CollisionBounds(), block.CollisionBounds()){
+			blockedRight = true
+			break
+		}
+
+		if !blockedRight {
+			m.Mirrors = append(m.Mirrors, rightMirror)
+			m.BeamNodes = append(m.BeamNodes, rightPos)
+		}
 	}
 
 	// Add a final node to let the beam exit the mirror array
