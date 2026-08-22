@@ -12,10 +12,7 @@ type Game struct {
 	input                  *InputManager
 	player                 *Player
 	enemy                  *Enemy
-<<<<<<< HEAD
 	mirrorGame             MirrorGame
-=======
->>>>>>> swordArrayAttack
 	multiSwordAttack       [5]*Sword
 	multiSwordAttackSprite *ebiten.Image
 }
