@@ -33,11 +33,23 @@ func (s *Sword) Shoot(position Vector2, direction float64) bool {
 		return false
 	}
 
+	s.Pos = position
+	s.Rotation = direction
+	s.Lifetime = 150
+	s.Active = true
+	return true
+}
+
+func (s *Sword) ShootRandom(position Vector2, direction float64) bool {
+	if s.Active {
+		return false
+	}
+
 	const spread = math.Pi / 6 // 30 degrees
 
 	s.Pos = position
 	s.Rotation = direction + (rand.Float64()*2-1)*spread
-	s.Lifetime = 60
+	s.Lifetime = 120
 	s.Active = true
 	return true
 }

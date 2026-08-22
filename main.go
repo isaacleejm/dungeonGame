@@ -9,13 +9,12 @@ import (
 )
 
 type Game struct {
-	input                  *InputManager
-	player                 *Player
-	enemy                  *Enemy
-	mirrorGame             MirrorGame
-	SingleAttack           SingleAttack
-	multiSwordAttack       [10]*Sword
-	multiSwordAttackSprite *ebiten.Image
+	input            *InputManager
+	player           *Player
+	enemy            *Enemy
+	mirrorGame       MirrorGame
+	SingleAttack     SingleAttack
+	multiSwordAttack [10]*Sword
 }
 
 func (g *Game) Update() error {
@@ -29,10 +28,19 @@ func (g *Game) Update() error {
 		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
 	}
 	g.mirrorGame.Update()
+
+	if inputState.StartAttack && g.player.SpellState == SwordState {
+		for _, sword := range g.multiSwordAttack {
+			if sword.Shoot(g.player.Center(), g.player.Rotation) {
+				break
+			}
+		}
+	}
+
 	if inputState.StartArrayAttack && g.player.SpellState == SwordState {
 		count := 0
 		for _, sword := range g.multiSwordAttack {
-			if sword.Shoot(g.player.Center(), g.player.Rotation) {
+			if sword.ShootRandom(g.player.Center(), g.player.Rotation) {
 				count++
 			}
 			if count > 4 {
@@ -42,6 +50,7 @@ func (g *Game) Update() error {
 	}
 	for _, sword := range g.multiSwordAttack {
 		sword.Update()
+		// Sword Collision with Enemy
 		if g.enemy.Alive && sword.Active && g.enemy.CollidesWithPoint(sword.Center()) {
 			sword.Active = false
 			g.enemy.Alive = false
@@ -160,8 +169,7 @@ func main() {
 			rotation:      player.Rotation,
 			startRotation: player.Rotation,
 		},
-		multiSwordAttackSprite: multiSwordAttackSprite,
-		multiSwordAttack:       multiSwordAttack,
+		multiSwordAttack: multiSwordAttack,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {

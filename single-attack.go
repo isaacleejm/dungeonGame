@@ -14,46 +14,47 @@ const (
 )
 
 type SingleAttack struct {
-	pos         Vector2
-	startPos 	Vector2
-	endPos      Vector2
-	rotation    float64
+	pos           Vector2
+	startPos      Vector2
+	endPos        Vector2
+	rotation      float64
 	startRotation float64
-	attackTimer float64
-	attackState AttackState
-	SwordSprite *ebiten.Image
-	BeamSprite *ebiten.Image
-	spellState SpellState
+	attackTimer   float64
+	attackState   AttackState
+	SwordSprite   *ebiten.Image
+	BeamSprite    *ebiten.Image
+	spellState    SpellState
 }
 
 func (sa *SingleAttack) Update(spellState SpellState, input InputState, playerPos Vector2, playerRotation float64) {
-	sa.spellState = spellState;
+	sa.spellState = spellState
 
-	if spellState == SwordState{
-		if input.StartAttack && sa.attackState == NotAttacking {
-			sa.attackState = MiddleAttack
+	// if spellState == SwordState{
+	// 	if input.StartAttack && sa.attackState == NotAttacking {
+	// 		sa.attackState = MiddleAttack
 
-			sa.pos = playerPos
-			sa.startPos = playerPos
+	// 		sa.pos = playerPos
+	// 		sa.startPos = playerPos
 
-			sa.rotation = playerRotation
-			sa.startRotation = playerRotation
-		}
+	// 		sa.rotation = playerRotation
+	// 		sa.startRotation = playerRotation
+	// 	}
 
-		if sa.attackState == MiddleAttack {
-			speed := 1.0
+	// 	if sa.attackState == MiddleAttack {
+	// 		speed := 1.0
 
-			sa.pos.X += math.Cos(sa.startRotation) * speed
-			sa.pos.Y += math.Sin(sa.startRotation) * speed
+	// 		sa.pos.X += math.Cos(sa.startRotation) * speed
+	// 		sa.pos.Y += math.Sin(sa.startRotation) * speed
 
-			dx := sa.pos.X - sa.startPos.X
-			dy := sa.pos.Y - sa.startPos.Y
+	// 		dx := sa.pos.X - sa.startPos.X
+	// 		dy := sa.pos.Y - sa.startPos.Y
 
-			if math.Hypot(dx, dy) >= 100.0 {
-				sa.attackState = NotAttacking
-			}
-		}
-	}else if spellState == MirrorState{
+	// 		if math.Hypot(dx, dy) >= 100.0 {
+	// 			sa.attackState = NotAttacking
+	// 		}
+	// 	}
+	// }else
+	if spellState == MirrorState {
 		if input.StartAttack && sa.attackState == NotAttacking {
 			sa.attackState = MiddleAttack
 
@@ -84,12 +85,12 @@ func (sa *SingleAttack) Update(spellState SpellState, input InputState, playerPo
 	}
 }
 
-func (sa *SingleAttack) Draw(screen *ebiten.Image){
-	if sa.attackState != MiddleAttack{
+func (sa *SingleAttack) Draw(screen *ebiten.Image) {
+	if sa.attackState != MiddleAttack {
 		return
 	}
-	
-	if sa.spellState == SwordState{
+
+	if sa.spellState == SwordState {
 		options := &ebiten.DrawImageOptions{}
 
 		bounds := sa.SwordSprite.Bounds()
@@ -101,7 +102,7 @@ func (sa *SingleAttack) Draw(screen *ebiten.Image){
 		options.GeoM.Translate(sa.pos.X, sa.pos.Y)
 
 		screen.DrawImage(sa.SwordSprite, options)
-	} else if sa.spellState == MirrorState{
+	} else if sa.spellState == MirrorState {
 		options := &ebiten.DrawImageOptions{}
 
 		bounds := sa.BeamSprite.Bounds()
@@ -124,4 +125,3 @@ func (sa *SingleAttack) Draw(screen *ebiten.Image){
 		screen.DrawImage(sa.BeamSprite, options)
 	}
 }
-
