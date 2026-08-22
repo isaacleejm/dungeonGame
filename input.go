@@ -6,12 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type State int
-
-const  (
-	waht = iota
-)
-
 type InputState struct {
 	MoveX        float64
 	MoveY        float64
