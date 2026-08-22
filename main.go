@@ -12,7 +12,10 @@ type Game struct {
 	input                  *InputManager
 	player                 *Player
 	enemy                  *Enemy
+<<<<<<< HEAD
 	mirrorGame             MirrorGame
+=======
+>>>>>>> swordArrayAttack
 	multiSwordAttack       [5]*Sword
 	multiSwordAttackSprite *ebiten.Image
 }
@@ -41,7 +44,7 @@ func (g *Game) Update() error {
 		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
 	}
 	g.mirrorGame.Update()
-	if inputState.AreaSwordSpell && g.player.SpellState == 1 {
+	if inputState.AreaSwordSpell && g.player.SpellState == SwordState {
 		for _, sword := range g.multiSwordAttack {
 			sword.Shoot(g.player.Center(), g.player.Rotation)
 		}
