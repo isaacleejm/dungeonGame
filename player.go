@@ -20,8 +20,7 @@ type Player struct {
 	MirrorSprite *ebiten.Image
 	SwordSprite  *ebiten.Image
 	SpellState   SpellState
-	swordAttack SwordAttack
-	beamAttack BeamAttack
+	singleAttack SingleAttack
 }
 
 func NewPlayer(
@@ -30,8 +29,7 @@ func NewPlayer(
 	speed float64,
 	mirrorSprite *ebiten.Image,
 	swordSprite *ebiten.Image,
-	swordAttack *SwordAttack,
-	beamAttack *BeamAttack,
+	singleAttack *SingleAttack,
 ) *Player {
 	bounds := mirrorSprite.Bounds()
 	startX := float64(screenWidth/2 - bounds.Dx()/2)
@@ -42,21 +40,14 @@ func NewPlayer(
 		Speed:        speed,
 		MirrorSprite: mirrorSprite,
 		SwordSprite:  swordSprite,
-		swordAttack: *swordAttack,
-		beamAttack: *beamAttack,
+		singleAttack: *singleAttack,
 	}
 
-	player.beamAttack.pos = player.Center()
-	player.beamAttack.startPos = player.Center()
+	player.singleAttack.pos = player.Center()
+	player.singleAttack.startPos = player.Center()
 
-	player.beamAttack.rotation = player.Rotation
-	player.beamAttack.startRotation = player.Rotation
-
-	player.swordAttack.pos = player.Center()
-	player.swordAttack.startPos = player.Center()
-
-	player.swordAttack.rotation = player.Rotation
-	player.swordAttack.startRotation = player.Rotation
+	player.singleAttack.rotation = player.Rotation
+	player.singleAttack.startRotation = player.Rotation
 
 	return player
 }
@@ -82,10 +73,8 @@ func (p *Player) Update(input InputState) {
 			p.SpellState = MirrorState
 		}
 	}
-
-	p.swordAttack.Update(input, p.Center(), p.Rotation)
-	p.beamAttack.Update(input, p.Center(), p.Rotation)
-
+	p.singleAttack.Update(p.SpellState, input, p.Center(), p.Rotation)
+	
 	dx, dy := input.MoveX, input.MoveY
 	length := math.Hypot(dx, dy)
 	if length > 0 {
@@ -111,11 +100,7 @@ func (p *Player) Draw(screen *ebiten.Image) {
 		screen.DrawImage(p.SwordSprite, op)
 	}
 
-	if p.swordAttack.attackState == MiddleAttack {
-		p.swordAttack.Draw(screen)
-	}
-
-	if p.beamAttack.attackState == MiddleAttack {
-		p.beamAttack.Draw(screen)
+	if p.singleAttack.attackState == MiddleAttack {
+		p.singleAttack.Draw(screen, p.SpellState)
 	}
 }

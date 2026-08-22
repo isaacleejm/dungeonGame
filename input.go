@@ -13,7 +13,6 @@ type InputState struct {
 	HasAngleLock bool // True if aiming with mouse or moving stick
 	ToggleSpell  bool // True for a single frame on button press
 	StartAttack bool
-	StartBeamAttack bool
 }
 
 type InputManager struct {
@@ -38,11 +37,6 @@ func NewInputManager(deadzone float64) *InputManager {
 			StandardButton: ebiten.StandardGamepadButtonRightRight,
 			RawButtonIndex: 1,
 		},
-		beamAttackBinding: ActionBinding{
-			Key: ebiten.KeyH,
-			StandardButton: ebiten.StandardGamepadButtonRightTop,
-			RawButtonIndex: 3,
-		},
 	}
 }
 
@@ -60,8 +54,6 @@ func (im *InputManager) Poll(playerCenter Vector2) InputState {
 	state.ToggleSpell = im.toggleBinding.JustPressedGamepad(id)
 
 	state.StartAttack = im.attackBinding.JustPressedGamepad(id)
-
-	state.StartBeamAttack = im.beamAttackBinding.JustPressedGamepad(id)
 
 	var rawX, rawY float64
 
@@ -98,7 +90,6 @@ func (im *InputManager) pollKBM(playerCenter Vector2) InputState {
 
 	state.ToggleSpell = im.toggleBinding.JustPressedKey()
 	state.StartAttack = im.attackBinding.JustPressedKey()
-	state.StartBeamAttack = im.beamAttackBinding.JustPressedKey()
 
 	var kx, ky float64
 	if ebiten.IsKeyPressed(ebiten.KeyW) {

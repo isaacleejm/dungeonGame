@@ -74,13 +74,10 @@ func main() {
 		speed,
 		mirrorSprite,
 		swordSprite,
-		&SwordAttack{
+		&SingleAttack{
 			attackState: NotAttacking,
-			Sprite: swordAttackSprite,
-		},
-		&BeamAttack{
-			attackState: NotAttacking,
-			Sprite: beamAttackSprite,
+			SwordSprite: swordAttackSprite,
+			BeamSprite: beamAttackSprite,
 		},
 	)
 
