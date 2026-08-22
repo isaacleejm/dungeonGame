@@ -63,7 +63,7 @@ func (g *Game) Update() error {
 		for _, enemy := range g.enemies {
 			if enemy.Alive && sword.Active && Collides(enemy.CollisionBounds(), sword.CollisionBounds()) {
 				sword.Active = false
-				enemy.Alive = false
+				enemy.Health--
 			}
 		}
 	}

@@ -74,7 +74,7 @@ func (e *Enemy) Center() Vector2 {
 	}
 }
 
-func (e *Enemy) CollisionBounds() Vector4{
+func (e *Enemy) CollisionBounds() Vector4 {
 	bounds := e.Sprite.Bounds()
 
 	return Vector4{
@@ -88,6 +88,10 @@ func (e *Enemy) CollisionBounds() Vector4{
 func (e *Enemy) Update(p *Player, block Block) {
 	blockedX := false
 	blockedY := false
+
+	if e.Health <= 0 {
+		e.Alive = false
+	}
 
 	playerPos := p.Pos
 	enemyPos := e.Pos
