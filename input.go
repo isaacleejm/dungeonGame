@@ -35,7 +35,7 @@ func NewInputManager(deadzone float64) *InputManager {
 		},
 		attackBinding: ActionBinding{
 			Key:            ebiten.KeyK,
-			StandardButton: ebiten.StandardGamepadButtonRightRight,
+			StandardButton: ebiten.StandardGamepadButtonRightTop,
 			RawButtonIndex: 1,
 		},
 		arrayAttackBinding: ActionBinding{

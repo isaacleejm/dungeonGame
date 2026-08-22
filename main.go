@@ -20,28 +20,13 @@ type Game struct {
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState)
-
-	if g.enemy == nil {
-		enemySprite, _, err := ebitenutil.NewImageFromFile("assets/enemyRed.png")
-		if err != nil {
-			log.Fatal(err)
-		}
-		g.enemy = NewEnemy(
-			screenWidthValue,
-			screenHeightValue,
-			1.0,
-			enemySprite,
-			g.player,
-		)
-	}
-
 	g.enemy.Update(g.player)
 
 	if inputState.StartArrayAttack && g.player.SpellState == MirrorState {
 		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
 	}
 	g.mirrorGame.Update()
-	if inputState.AreaSwordSpell && g.player.SpellState == SwordState {
+	if inputState.StartArrayAttack && g.player.SpellState == SwordState {
 		for _, sword := range g.multiSwordAttack {
 			sword.Shoot(g.player.Center(), g.player.Rotation)
 		}
