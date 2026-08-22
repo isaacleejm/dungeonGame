@@ -20,6 +20,7 @@ type Player struct {
 	MirrorSprite *ebiten.Image
 	SwordSprite  *ebiten.Image
 	SpellState   SpellState
+	Health       int
 }
 
 func NewPlayer(
@@ -38,6 +39,7 @@ func NewPlayer(
 		Speed:        speed,
 		MirrorSprite: mirrorSprite,
 		SwordSprite:  swordSprite,
+		Health:       5,
 	}
 
 	return player
@@ -51,7 +53,7 @@ func (p *Player) Center() Vector2 {
 	}
 }
 
-func (p *Player) CollisionBoundsMirror() Vector4{
+func (p *Player) CollisionBoundsMirror() Vector4 {
 	bounds := p.MirrorSprite.Bounds()
 
 	return Vector4{
@@ -62,7 +64,7 @@ func (p *Player) CollisionBoundsMirror() Vector4{
 	}
 }
 
-func (p *Player) CollisionBoundsSword() Vector4{
+func (p *Player) CollisionBoundsSword() Vector4 {
 	bounds := p.SwordSprite.Bounds()
 
 	return Vector4{

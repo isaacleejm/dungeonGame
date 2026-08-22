@@ -14,9 +14,9 @@ type InputState struct {
 	ToggleSpell      bool // True for a single frame on button press
 	StartAttack      bool
 	StartArrayAttack bool
-	ThemeChange bool
-	LayoutChange bool
-	blockChange bool
+	ThemeChange      bool
+	LayoutChange     bool
+	blockChange      bool
 }
 
 type InputManager struct {
@@ -26,8 +26,8 @@ type InputManager struct {
 	toggleBinding      ActionBinding
 	attackBinding      ActionBinding
 	arrayAttackBinding ActionBinding
-	themeBinding ActionBinding
-	layoutBinding ActionBinding
+	themeBinding       ActionBinding
+	layoutBinding      ActionBinding
 	blockChangeBinding ActionBinding
 }
 
@@ -51,17 +51,17 @@ func NewInputManager(deadzone float64) *InputManager {
 		},
 		themeBinding: ActionBinding{
 			Key:            ebiten.KeyT,
-			StandardButton: ebiten.StandardGamepadButtonRightRight,
-			RawButtonIndex: 6,
+			StandardButton: ebiten.StandardGamepadButtonLeftBottom,
+			RawButtonIndex: 3,
 		},
 		layoutBinding: ActionBinding{
 			Key:            ebiten.KeyL,
-			StandardButton: ebiten.StandardGamepadButtonRightRight,
+			StandardButton: ebiten.StandardGamepadButtonLeftLeft,
 			RawButtonIndex: 4,
 		},
 		blockChangeBinding: ActionBinding{
 			Key:            ebiten.KeyB,
-			StandardButton: ebiten.StandardGamepadButtonRightRight,
+			StandardButton: ebiten.StandardGamepadButtonLeftTop,
 			RawButtonIndex: 5,
 		},
 	}
