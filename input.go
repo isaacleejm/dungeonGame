@@ -22,7 +22,6 @@ type InputManager struct {
 	lastMousePos Vector2
 	toggleBinding ActionBinding
 	attackBinding ActionBinding
-	beamAttackBinding ActionBinding
 	arrayAttackBinding ActionBinding
 }
 
