@@ -21,6 +21,7 @@ type Player struct {
 	SwordSprite  *ebiten.Image
 	SpellState   SpellState
 	swordAttack SwordAttack
+	beamAttack BeamAttack
 }
 
 func NewPlayer(
@@ -30,6 +31,7 @@ func NewPlayer(
 	mirrorSprite *ebiten.Image,
 	swordSprite *ebiten.Image,
 	swordAttack *SwordAttack,
+	beamAttack *BeamAttack,
 ) *Player {
 	bounds := mirrorSprite.Bounds()
 	startX := float64(screenWidth/2 - bounds.Dx()/2)
@@ -41,7 +43,14 @@ func NewPlayer(
 		MirrorSprite: mirrorSprite,
 		SwordSprite:  swordSprite,
 		swordAttack: *swordAttack,
+		beamAttack: *beamAttack,
 	}
+
+	player.beamAttack.pos = player.Center()
+	player.beamAttack.startPos = player.Center()
+
+	player.beamAttack.rotation = player.Rotation
+	player.beamAttack.startRotation = player.Rotation
 
 	player.swordAttack.pos = player.Center()
 	player.swordAttack.startPos = player.Center()
@@ -75,6 +84,7 @@ func (p *Player) Update(input InputState) {
 	}
 
 	p.swordAttack.Update(input, p.Center(), p.Rotation)
+	p.beamAttack.Update(input, p.Center(), p.Rotation)
 
 	dx, dy := input.MoveX, input.MoveY
 	length := math.Hypot(dx, dy)
@@ -103,5 +113,9 @@ func (p *Player) Draw(screen *ebiten.Image) {
 
 	if p.swordAttack.attackState == MiddleAttack {
 		p.swordAttack.Draw(screen)
+	}
+
+	if p.beamAttack.attackState == MiddleAttack {
+		p.beamAttack.Draw(screen)
 	}
 }
