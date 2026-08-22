@@ -29,7 +29,7 @@ func NewSword(speed float64, sprite *ebiten.Image, player *Player, active bool, 
 }
 
 func (s *Sword) Shoot(position Vector2, direction float64) bool {
-	if s.Active {
+	if s.Active || s.Lifetime > 0 {
 		return false
 	}
 
@@ -41,7 +41,7 @@ func (s *Sword) Shoot(position Vector2, direction float64) bool {
 }
 
 func (s *Sword) ShootRandom(position Vector2, direction float64) bool {
-	if s.Active {
+	if s.Active || s.Lifetime > 0 {
 		return false
 	}
 
@@ -62,7 +62,7 @@ func (s *Sword) Center() Vector2 {
 	}
 }
 
-func (s *Sword) CollisionBounds() Vector4{
+func (s *Sword) CollisionBounds() Vector4 {
 	bounds := s.Sprite.Bounds()
 
 	return Vector4{
@@ -75,6 +75,9 @@ func (s *Sword) CollisionBounds() Vector4{
 
 func (s *Sword) Update(blocks []*Block) {
 	if !s.Active {
+		if s.Lifetime > 0 {
+			s.Lifetime--
+		}
 		return
 	}
 	moveX := math.Cos(s.Rotation) * s.Speed
