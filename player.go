@@ -29,18 +29,26 @@ func NewPlayer(screenWidth, screenHeight int, speed float64, sprite *ebiten.Imag
 	}
 }
 
+func (p *Player) Center() Vector2 {
+	bounds := p.Sprite.Bounds()
+	return Vector2{
+		X: p.Pos.X + float64(bounds.Dx())/2,
+		Y: p.Pos.Y + float64(bounds.Dy())/2,
+	}
+}
+
 func (p *Player) Update(input InputState) {
-	dx, dy := input.MoveX, input.MoveY
-	length := math.Hypot(dx, dy)
-	if length == 0 {
-		return
+	if input.HasAngleLock {
+		p.Rotation = input.TargetAngle
 	}
 
-	p.Rotation = math.Atan2(dy, dx)
-	magnitude := math.Min(1.0, length)
-
-	p.Pos.X += (dx / length) * p.Speed * magnitude
-	p.Pos.Y += (dy / length) * p.Speed * magnitude
+	dx, dy := input.MoveX, input.MoveY
+	length := math.Hypot(dx, dy)
+	if length > 0 {
+		magnitude := math.Min(1.0, length)
+		p.Pos.X += (dx / length) * p.Speed * magnitude
+		p.Pos.Y += (dy / length) * p.Speed * magnitude
+	}
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {

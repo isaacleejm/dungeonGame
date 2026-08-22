@@ -14,7 +14,7 @@ type Game struct {
 }
 
 func (g *Game) Update() error {
-	inputState := g.input.Poll()
+	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState)
 	return nil
 }
