@@ -6,10 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Vector2 struct {
-	X, Y float64
-}
-
 type Player struct {
 	Pos      Vector2
 	Rotation float64
