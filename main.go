@@ -13,6 +13,7 @@ type Game struct {
 	player *Player
 	enemy  *Enemy
 	mirrorGame MirrorGame
+	SingleAttack SingleAttack
 }
 
 func (g *Game) Update() error {
@@ -35,6 +36,8 @@ func (g *Game) Update() error {
 
 	g.enemy.Update(g.player)
 
+	g.SingleAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
+
 	if inputState.StartArrayAttack && g.player.SpellState == MirrorState {
 		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
 	}
@@ -49,6 +52,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.player.Draw(screen)
 	g.enemy.Draw(screen)
 	g.mirrorGame.Draw(screen)
+	g.SingleAttack.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -97,11 +101,6 @@ func main() {
 		speed,
 		mirrorSprite,
 		swordSprite,
-		&SingleAttack{
-			attackState: NotAttacking,
-			SwordSprite: swordAttackSprite,
-			BeamSprite: beamAttackSprite,
-		},
 	)
 
 	enemy := NewEnemy(
@@ -111,7 +110,7 @@ func main() {
 		enemySprite,
 		player,
 	)
-	
+
 	beamSprite, _, err := ebitenutil.NewImageFromFile("assets/beam.png")
 	if err != nil {
 		log.Fatal(err)
@@ -125,6 +124,15 @@ func main() {
 		player: player,
 		enemy:  enemy,
 		mirrorGame: NewMirrorGame(beamSprite),
+		SingleAttack: SingleAttack{
+			attackState: NotAttacking,
+			SwordSprite: swordAttackSprite,
+			BeamSprite: beamAttackSprite,
+			pos: player.Pos,
+			startPos: player.Pos,
+			rotation: player.Rotation,
+			startRotation: player.Rotation,
+		},
 	}
 
 	if err := ebiten.RunGame(game); err != nil {
