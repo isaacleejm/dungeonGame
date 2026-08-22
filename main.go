@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"image/color"
 	"log"
+	_ "embed"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -73,8 +74,26 @@ func (g *Game) Update() error {
 
 	g.beamAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
 
-	if inputState.StartArrayAttack && g.player.SpellState == MirrorState {
-		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation, g.blocks)
+	if inputState.StartArrayAttack {
+		switch g.player.SpellState {
+			case MirrorState:
+				g.mirrorGame.Cast(
+					g.player.Center(),
+					g.player.Rotation,
+					g.blocks,
+				)
+
+			case SwordState:
+				count := 0
+				for _, sword := range g.multiSwordAttack {
+					if sword.ShootRandom(g.player.Center(), g.player.Rotation) {
+						count++
+					}
+					if count > 4 {
+						break
+					}
+				}
+		}
 	}
 
 	g.mirrorGame.Update()
@@ -82,18 +101,6 @@ func (g *Game) Update() error {
 	if inputState.StartAttack && g.player.SpellState == SwordState {
 		for _, sword := range g.multiSwordAttack {
 			if sword.Shoot(g.player.Center(), g.player.Rotation) {
-				break
-			}
-		}
-	}
-
-	if inputState.StartArrayAttack && g.player.SpellState == SwordState {
-		count := 0
-		for _, sword := range g.multiSwordAttack {
-			if sword.ShootRandom(g.player.Center(), g.player.Rotation) {
-				count++
-			}
-			if count > 4 {
 				break
 			}
 		}
@@ -185,9 +192,17 @@ const (
 	deadzone          = 0.2 // Ignores minor stick drift
 )
 
+//go:embed assets/gamecontrollerdb.txt
+var customGamepadDB string
+
 func main() {
 	ebiten.SetWindowSize(1000, 750)
 	ebiten.SetWindowTitle("Turtlezard")
+
+	mappingsApplied, err := ebiten.UpdateStandardGamepadLayoutMappings(customGamepadDB)
+	if !mappingsApplied || err != nil {
+		log.Printf("Warning: failed to load embedded gamepad mappings: %v", err)
+	}
 
 	mirrorSprite, _, err := ebitenutil.NewImageFromFile("assets/mirror-wizard.png")
 	if err != nil {
