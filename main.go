@@ -22,7 +22,6 @@ func (g *Game) Update() error {
 	g.enemy.Update(g.player)
 
 	if inputState.AreaSwordSpell {
-		print("pressed")
 		for _, sword := range g.multiSwordAttack {
 			sword.Shoot(g.player.Center(), g.player.Rotation)
 		}
@@ -96,11 +95,11 @@ func main() {
 	)
 
 	multiSwordAttack := [5]*Sword{
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
 	}
 
 	game := &Game{

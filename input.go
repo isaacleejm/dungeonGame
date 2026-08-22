@@ -51,6 +51,7 @@ func (im *InputManager) Poll(playerCenter Vector2) InputState {
 
 	id := im.gamepadIDs[0]
 	state.ToggleSpell = im.toggleBinding.JustPressedGamepad(id)
+	state.AreaSwordSpell = im.areaSwordBinding.JustPressedGamepad(id)
 
 	var rawX, rawY float64
 
