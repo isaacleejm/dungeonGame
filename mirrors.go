@@ -87,7 +87,7 @@ func (m *MirrorGame) Update() {
 }
 
 /// Parameters come from the Player
-func (m *MirrorGame) Cast(center Vector2, theta float64, block Block) {
+func (m *MirrorGame) Cast(center Vector2, theta float64, blocks []*Block) {
 	// Clear previous mirrors (todo: replace old ones gradually)
 	m.Mirrors = make([]Mirror, 0)
 
@@ -122,9 +122,11 @@ func (m *MirrorGame) Cast(center Vector2, theta float64, block Block) {
 
 		blockedLeft := false
 
-		if Collides(leftMirror.CollisionBounds(), block.CollisionBounds()){
-			blockedLeft = true
-			break
+		for _, block := range blocks {
+			if Collides(leftMirror.CollisionBounds(), block.CollisionBounds()){
+				blockedLeft = true
+				break
+			}
 		}
 
 		if !blockedLeft {
@@ -145,9 +147,11 @@ func (m *MirrorGame) Cast(center Vector2, theta float64, block Block) {
 
 		blockedRight := false
 
-		if Collides(rightMirror.CollisionBounds(), block.CollisionBounds()){
-			blockedRight = true
-			break
+		for _, block := range blocks {
+			if Collides(rightMirror.CollisionBounds(), block.CollisionBounds()){
+				blockedRight = true
+				break
+			}
 		}
 
 		if !blockedRight {

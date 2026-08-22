@@ -73,7 +73,7 @@ func (s *Sword) CollisionBounds() Vector4{
 	}
 }
 
-func (s *Sword) Update(block Block) {
+func (s *Sword) Update(blocks []*Block) {
 	if !s.Active {
 		return
 	}
@@ -83,8 +83,10 @@ func (s *Sword) Update(block Block) {
 	s.Pos.X += moveX
 	s.Pos.Y += moveY
 
-	if Collides(s.CollisionBounds(), block.CollisionBounds()) {
-		s.Active = false
+	for _, block := range blocks {
+		if Collides(s.CollisionBounds(), block.CollisionBounds()) {
+			s.Active = false
+		}
 	}
 
 	s.Lifetime--

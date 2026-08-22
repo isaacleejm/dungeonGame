@@ -16,19 +16,58 @@ type Game struct {
 	beamAttack     	 BeamAttack
 	multiSwordAttack [10]*Sword
 	multiSwordAttackSprite *ebiten.Image
-	blocks 					*Block
+	blocks 	[]*Block
+	background color.RGBA
+
+	blockIndex  int
+	layoutIndex int
+	themeIndex  int
+
+	blockSprite *ebiten.Image
+	blockSpriteList []*ebiten.Image
+}
+
+var backgroundList = []color.RGBA{
+	Backgrounds.Gray,
+	Backgrounds.Blue,
+	Backgrounds.Red,
+	Backgrounds.Green,
+	Backgrounds.Purple,
+}
+
+var layoutList = [][]string{
+	Layouts.Layout1,
+	Layouts.Layout2,
+	Layouts.Layout3,
+	Layouts.Layout4,
+	Layouts.Layout5,
+	Layouts.Layout6,
+	Layouts.Layout7,
+	Layouts.Layout8,
+	Layouts.Layout9,
+	Layouts.Layout10,
+}
+
+func (g *Game) UpdateLevel() {
+	currentLevel := BlocksFromLayout(
+		layoutList[g.layoutIndex],
+		g.blockSprite,
+		backgroundList[g.themeIndex],
+	)
+
+	g.blocks = currentLevel.Blocks
+	g.background = currentLevel.Background
 }
 
 func (g *Game) Update() error {
-	g.blocks.Update(150, 150)
 	inputState := g.input.Poll(g.player.Center())
-	g.enemy.Update(g.player, *g.blocks)
-	g.player.Update(inputState, *g.blocks)
+	g.enemy.Update(g.player, g.blocks)
+	g.player.Update(inputState, g.blocks)
 
 	g.beamAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
 
 	if inputState.StartArrayAttack && g.player.SpellState == MirrorState {
-		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation, *g.blocks)
+		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation, g.blocks)
 	}
 
 	g.mirrorGame.Update()
@@ -53,8 +92,40 @@ func (g *Game) Update() error {
 		}
 	}
 
+	if inputState.blockChange {
+		g.blockIndex++
+
+		if g.blockIndex >= len(g.blockSpriteList) {
+			g.blockIndex = 0
+		}
+
+		g.blockSprite = g.blockSpriteList[g.blockIndex]
+
+		g.UpdateLevel()
+	}
+
+	if inputState.LayoutChange {
+		g.layoutIndex++
+
+		if g.layoutIndex >= len(layoutList) {
+			g.layoutIndex = 0
+		}
+
+		g.UpdateLevel()
+	}
+
+	if inputState.ThemeChange {
+		g.themeIndex++
+
+		if g.themeIndex >= len(backgroundList) {
+			g.themeIndex = 0
+		}
+
+		g.UpdateLevel()
+	}
+
 	for _, sword := range g.multiSwordAttack {
-		sword.Update(*g.blocks)
+		sword.Update(g.blocks)
 		// Sword Collision with Enemy
 		if g.enemy.Alive && sword.Active && Collides(g.enemy.CollisionBounds(), sword.CollisionBounds()) {
 			sword.Active = false
@@ -67,12 +138,16 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	// Background color
-	screen.Fill(color.RGBA{30, 30, 46, 0xff})
+	// screen.Fill(color.RGBA{30, 30, 46, 0xff})
+	screen.Fill(g.background)
 	g.player.Draw(screen)
 	g.enemy.Draw(screen)
 	g.mirrorGame.Draw(screen)
 	g.beamAttack.Draw(screen)
-	g.blocks.Draw(screen)
+
+	for _, block := range g.blocks {
+		block.Draw(screen)
+	}
 
 	for _, sword := range g.multiSwordAttack {
 		sword.Draw(screen)
@@ -119,6 +194,27 @@ func main() {
 		log.Fatal(err)
 	}
 
+	dungeonBlockSprite, _, err := ebitenutil.NewImageFromFile("assets/dungeon-block.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	logBlockSprite, _, err := ebitenutil.NewImageFromFile("assets/log-block.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	brickBlockSprite, _, err := ebitenutil.NewImageFromFile("assets/brick-block.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	blockSpriteList := []*ebiten.Image{
+		brickBlockSprite,
+		dungeonBlockSprite,
+		logBlockSprite,
+	}
+
 	player := NewPlayer(
 		screenWidthValue,
 		screenHeightValue,
@@ -141,8 +237,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dungeonBlockSprite, _, err := ebitenutil.NewImageFromFile("assets/dungeon-block.png")
-
 	mirrorImage := ebiten.NewImage(50, 2)
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
@@ -159,6 +253,12 @@ func main() {
 		NewSword(5, swordAttackSprite, player, false, 0),
 	}
 
+	currentLevel := BlocksFromLayout(
+		Layouts.Layout1,
+		logBlockSprite,
+		Backgrounds.Gray,
+	)
+
 	game := &Game{
 		input:      NewInputManager(deadzone),
 		player:     player,
@@ -174,10 +274,14 @@ func main() {
 		},
 		multiSwordAttackSprite: swordAttackSprite,
 		multiSwordAttack:       multiSwordAttack,
-		blocks: &Block{
-			Pos: Vector2{50, 50},
-			Sprite: dungeonBlockSprite,
-		},
+		blocks: currentLevel.Blocks,
+		background: currentLevel.Background,
+		blockIndex:  0,
+		layoutIndex: 0,
+		themeIndex:  0,
+
+		blockSprite:     blockSpriteList[0],
+		blockSpriteList: blockSpriteList,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {

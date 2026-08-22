@@ -73,7 +73,7 @@ func (p *Player) CollisionBoundsSword() Vector4{
 	}
 }
 
-func (p *Player) Update(input InputState, block Block) {
+func (p *Player) Update(input InputState, blocks []*Block) {
 	if input.HasAngleLock {
 		p.Rotation = input.TargetAngle
 	}
@@ -97,27 +97,20 @@ func (p *Player) Update(input InputState, block Block) {
 		moveY = (dy / length) * p.Speed * magnitude
 	}
 
-	blockedX := false
-	blockedY := false
+	p.Pos.X += moveX
 
-	p.Pos.X += float64(moveX)
-
-	if Collides(p.CollisionBoundsMirror(), block.CollisionBounds()) || Collides(p.CollisionBoundsSword(), block.CollisionBounds()){
-		blockedX = true
+	for _, block := range blocks {
+		if Collides(p.CollisionBoundsMirror(), block.CollisionBounds()) || Collides(p.CollisionBoundsSword(), block.CollisionBounds()) {
+			p.Pos.X -= moveX
+		}
 	}
 
-	if blockedX {
-		p.Pos.X -= float64(moveX)
-	}
+	p.Pos.Y += moveY
 
-	p.Pos.Y += float64(moveY)
-
-	if Collides(p.CollisionBoundsMirror(), block.CollisionBounds()) || Collides(p.CollisionBoundsSword(), block.CollisionBounds()){
-		blockedY = true
-	}
-
-	if blockedY {
-		p.Pos.Y -= float64(moveY)
+	for _, block := range blocks {
+		if Collides(p.CollisionBoundsMirror(), block.CollisionBounds()) || Collides(p.CollisionBoundsSword(), block.CollisionBounds()) {
+			p.Pos.Y -= moveY
+		}
 	}
 }
 

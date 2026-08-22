@@ -83,10 +83,7 @@ func (e *Enemy) CollisionBounds() Vector4{
 	}
 }
 
-func (e *Enemy) Update(p *Player, block Block) {
-	blockedX := false
-	blockedY := false
-
+func (e *Enemy) Update(p *Player, blocks []*Block) {
 	playerPos := p.Pos
 	enemyPos := e.Pos
 
@@ -104,22 +101,18 @@ func (e *Enemy) Update(p *Player, block Block) {
 
 	e.Pos.X += moveX
 
-	if Collides(e.CollisionBounds(), block.CollisionBounds()) {
-		blockedX = true
-	}
-
-	if blockedX {
-		e.Pos.X -= moveX
+	for _, block := range blocks {
+		if Collides(e.CollisionBounds(), block.CollisionBounds()) {
+			e.Pos.X -= moveX
+		}
 	}
 
 	e.Pos.Y += moveY
 
-	if Collides(e.CollisionBounds(), block.CollisionBounds()) {
-		blockedY = true
-	}
-
-	if blockedY {
-		e.Pos.Y -= moveY
+	for _, block := range blocks {
+		if Collides(e.CollisionBounds(), block.CollisionBounds()) {
+			e.Pos.Y -= moveY
+		}
 	}
 }
 

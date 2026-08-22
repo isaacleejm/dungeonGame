@@ -14,6 +14,9 @@ type InputState struct {
 	ToggleSpell      bool // True for a single frame on button press
 	StartAttack      bool
 	StartArrayAttack bool
+	ThemeChange bool
+	LayoutChange bool
+	blockChange bool
 }
 
 type InputManager struct {
@@ -23,6 +26,9 @@ type InputManager struct {
 	toggleBinding      ActionBinding
 	attackBinding      ActionBinding
 	arrayAttackBinding ActionBinding
+	themeBinding ActionBinding
+	layoutBinding ActionBinding
+	blockChangeBinding ActionBinding
 }
 
 func NewInputManager(deadzone float64) *InputManager {
@@ -43,6 +49,21 @@ func NewInputManager(deadzone float64) *InputManager {
 			StandardButton: ebiten.StandardGamepadButtonRightRight,
 			RawButtonIndex: 2,
 		},
+		themeBinding: ActionBinding{
+			Key:            ebiten.KeyT,
+			StandardButton: ebiten.StandardGamepadButtonRightRight,
+			RawButtonIndex: 3,
+		},
+		layoutBinding: ActionBinding{
+			Key:            ebiten.KeyL,
+			StandardButton: ebiten.StandardGamepadButtonRightRight,
+			RawButtonIndex: 4,
+		},
+		blockChangeBinding: ActionBinding{
+			Key:            ebiten.KeyB,
+			StandardButton: ebiten.StandardGamepadButtonRightRight,
+			RawButtonIndex: 5,
+		},
 	}
 }
 
@@ -58,9 +79,13 @@ func (im *InputManager) Poll(playerCenter Vector2) InputState {
 
 	id := im.gamepadIDs[0]
 	state.ToggleSpell = im.toggleBinding.JustPressedGamepad(id)
-	state.StartArrayAttack = im.arrayAttackBinding.JustPressedGamepad(id)
 
+	state.StartArrayAttack = im.arrayAttackBinding.JustPressedGamepad(id)
 	state.StartAttack = im.attackBinding.JustPressedGamepad(id)
+
+	state.ThemeChange = im.themeBinding.JustPressedGamepad(id)
+	state.LayoutChange = im.layoutBinding.JustPressedGamepad(id)
+	state.blockChange = im.blockChangeBinding.JustPressedGamepad(id)
 
 	var rawX, rawY float64
 
@@ -98,6 +123,10 @@ func (im *InputManager) pollKBM(playerCenter Vector2) InputState {
 	state.ToggleSpell = im.toggleBinding.JustPressedKey()
 	state.StartAttack = im.attackBinding.JustPressedKey()
 	state.StartArrayAttack = im.arrayAttackBinding.JustPressedKey()
+
+	state.ThemeChange = im.themeBinding.JustPressedKey()
+	state.LayoutChange = im.layoutBinding.JustPressedKey()
+	state.blockChange = im.blockChangeBinding.JustPressedKey()
 
 	var kx, ky float64
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
