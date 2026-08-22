@@ -129,6 +129,22 @@ func (e *Enemy) Update(p *Player, block Block) {
 	}
 }
 
+func (e *Enemy) TakeDamage(damage int) bool {
+	if !e.Alive {
+		return false
+	}
+
+	e.Health -= damage
+
+	if e.Health <= 0 {
+		e.Health = 0
+		e.Alive = false
+		return true
+	}
+	// returns false if not dead
+	return false
+}
+
 func (e *Enemy) Draw(screen *ebiten.Image) {
 	if !e.Alive {
 		return

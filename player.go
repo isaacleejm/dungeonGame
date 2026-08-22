@@ -20,6 +20,7 @@ type Player struct {
 	MirrorSprite *ebiten.Image
 	SwordSprite  *ebiten.Image
 	SpellState   SpellState
+	Health       int
 }
 
 func NewPlayer(
@@ -38,6 +39,7 @@ func NewPlayer(
 		Speed:        speed,
 		MirrorSprite: mirrorSprite,
 		SwordSprite:  swordSprite,
+		Health:       5,
 	}
 
 	return player
@@ -51,7 +53,7 @@ func (p *Player) Center() Vector2 {
 	}
 }
 
-func (p *Player) CollisionBoundsMirror() Vector4{
+func (p *Player) CollisionBoundsMirror() Vector4 {
 	bounds := p.MirrorSprite.Bounds()
 
 	return Vector4{
@@ -62,7 +64,7 @@ func (p *Player) CollisionBoundsMirror() Vector4{
 	}
 }
 
-func (p *Player) CollisionBoundsSword() Vector4{
+func (p *Player) CollisionBoundsSword() Vector4 {
 	bounds := p.SwordSprite.Bounds()
 
 	return Vector4{
@@ -102,7 +104,7 @@ func (p *Player) Update(input InputState, block Block) {
 
 	p.Pos.X += float64(moveX)
 
-	if Collides(p.CollisionBoundsMirror(), block.CollisionBounds()) || Collides(p.CollisionBoundsSword(), block.CollisionBounds()){
+	if Collides(p.CollisionBoundsMirror(), block.CollisionBounds()) || Collides(p.CollisionBoundsSword(), block.CollisionBounds()) {
 		blockedX = true
 	}
 
@@ -112,7 +114,7 @@ func (p *Player) Update(input InputState, block Block) {
 
 	p.Pos.Y += float64(moveY)
 
-	if Collides(p.CollisionBoundsMirror(), block.CollisionBounds()) || Collides(p.CollisionBoundsSword(), block.CollisionBounds()){
+	if Collides(p.CollisionBoundsMirror(), block.CollisionBounds()) || Collides(p.CollisionBoundsSword(), block.CollisionBounds()) {
 		blockedY = true
 	}
 

@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"image/color"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 const MAX_SWORDS int = 10
@@ -19,9 +22,11 @@ type Game struct {
 	beamAttack       BeamAttack
 	blocks           *Block
 	multiSwordAttack [MAX_SWORDS]*Sword
+	score            *Score
 }
 
 func (g *Game) Update() error {
+	// Update Health Counter
 	g.blocks.Update(150, 150)
 	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState, *g.blocks)
@@ -63,7 +68,9 @@ func (g *Game) Update() error {
 		for _, enemy := range g.enemies {
 			if enemy.Alive && sword.Active && Collides(enemy.CollisionBounds(), sword.CollisionBounds()) {
 				sword.Active = false
-				enemy.Health--
+				if enemy.TakeDamage(1) {
+					g.score.Add(1)
+				}
 			}
 		}
 	}
@@ -85,6 +92,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, sword := range g.multiSwordAttack {
 		sword.Draw(screen)
 	}
+	g.score.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -157,6 +165,16 @@ func main() {
 		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, enemySpeed, enemySprite, player, true, enemyHealth)
 	}
 
+	fontSource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gameFace := &text.GoTextFace{
+		Source: fontSource,
+		Size:   24,
+	}
+
 	game := &Game{
 		input:      NewInputManager(deadzone),
 		player:     player,
@@ -175,6 +193,11 @@ func main() {
 			Pos:    Vector2{50, 50},
 			Sprite: dungeonBlockSprite,
 		},
+		score: NewScore(
+			Vector2{X: screenWidthValue - 125, Y: 0},
+			fontSource,
+			gameFace,
+		),
 	}
 
 	if err := ebiten.RunGame(game); err != nil {
