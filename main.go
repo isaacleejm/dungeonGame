@@ -42,7 +42,6 @@ func (g *Game) Update() error {
 	}
 	g.mirrorGame.Update()
 	if inputState.AreaSwordSpell {
-		print("pressed")
 		for _, sword := range g.multiSwordAttack {
 			sword.Shoot(g.player.Center(), g.player.Rotation)
 		}
@@ -140,11 +139,11 @@ func main() {
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
 	multiSwordAttack := [5]*Sword{
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
-		NewSword(1, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
+		NewSword(5, multiSwordAttackSprite, player, false, 0),
 	}
 
 	game := &Game{

@@ -69,10 +69,14 @@ func (s *Sword) Draw(screen *ebiten.Image) {
 	}
 
 	bounds := s.Sprite.Bounds()
-	width, height := float64(bounds.Dx()), float64(bounds.Dy())
+	width := float64(bounds.Dx())
+	height := float64(bounds.Dy())
 
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(s.Pos.X+width/2, s.Pos.Y+height/2)
+
+	op.GeoM.Translate(-width/2, -height/2)
+	op.GeoM.Rotate(s.Rotation + math.Pi/4)
+	op.GeoM.Translate(s.Pos.X, s.Pos.Y)
 
 	screen.DrawImage(s.Sprite, op)
 }
