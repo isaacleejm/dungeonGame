@@ -10,16 +10,16 @@ import (
 type Score struct {
 	Value      int
 	Pos        Vector2
-	fontSource *text.GoTextFaceSource
-	gameFace   *text.GoTextFace
+	FontSource *text.GoTextFaceSource
+	GameFace   *text.GoTextFace
 }
 
 func NewScore(position Vector2, fontSource *text.GoTextFaceSource, gameFace *text.GoTextFace) *Score {
 	return &Score{
 		Value:      0,
 		Pos:        position,
-		fontSource: fontSource,
-		gameFace:   gameFace,
+		FontSource: fontSource,
+		GameFace:   gameFace,
 	}
 }
 
@@ -40,5 +40,5 @@ func (s *Score) Draw(screen *ebiten.Image) {
 		s.Pos.Y,
 	)
 
-	text.Draw(screen, scoreText, s.gameFace, op)
+	text.Draw(screen, scoreText, s.GameFace, op)
 }

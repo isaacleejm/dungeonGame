@@ -23,6 +23,7 @@ type Game struct {
 	blocks           *Block
 	multiSwordAttack [MAX_SWORDS]*Sword
 	score            *Score
+	health           *Health
 }
 
 func (g *Game) Update() error {
@@ -75,6 +76,8 @@ func (g *Game) Update() error {
 		}
 	}
 
+	g.health.Update(g.player.Health)
+
 	return nil
 }
 
@@ -93,6 +96,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		sword.Draw(screen)
 	}
 	g.score.Draw(screen)
+	g.health.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -195,6 +199,12 @@ func main() {
 		},
 		score: NewScore(
 			Vector2{X: screenWidthValue - 125, Y: 0},
+			fontSource,
+			gameFace,
+		),
+		health: NewHealth(
+			player.Health,
+			Vector2{X: screenWidthValue/2 - 50, Y: 0},
 			fontSource,
 			gameFace,
 		),
