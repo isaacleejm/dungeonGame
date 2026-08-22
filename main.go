@@ -21,13 +21,17 @@ func (g *Game) Update() error {
 	g.player.Update(inputState)
 	g.enemy.Update(g.player)
 
-	if inputState.AreaSwordSpell {
+	if inputState.AreaSwordSpell && g.player.SpellState == 1 {
 		for _, sword := range g.multiSwordAttack {
 			sword.Shoot(g.player.Center(), g.player.Rotation)
 		}
 	}
 	for _, sword := range g.multiSwordAttack {
 		sword.Update()
+		if g.enemy.Alive && sword.Active && g.enemy.CollidesWithPoint(sword.Center()) {
+			sword.Active = false
+			g.enemy.Alive = false
+		}
 	}
 
 	return nil
@@ -48,14 +52,14 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 const (
-	screenWidthValue  = 320
-	screenHeightValue = 240
+	screenWidthValue  = 1000
+	screenHeightValue = 750
 	speed             = 4.0
 	deadzone          = 0.2 // Ignores minor stick drift
 )
 
 func main() {
-	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowSize(1000, 750)
 	ebiten.SetWindowTitle("Turtlezard")
 
 	mirrorSprite, _, err := ebitenutil.NewImageFromFile("assets/mirror-wizard.png")
@@ -92,6 +96,7 @@ func main() {
 		1.0,
 		enemySprite,
 		player,
+		true,
 	)
 
 	multiSwordAttack := [5]*Sword{
