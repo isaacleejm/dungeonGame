@@ -17,19 +17,6 @@ type Game struct {
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState)
-	if g.enemy == nil {
-		enemySprite, _, err := ebitenutil.NewImageFromFile("assets/enemyRed.png")
-		if err != nil {
-			log.Fatal(err)
-		}
-		g.enemy = NewEnemy(
-			screenWidthValue,
-			screenHeightValue,
-			1.0,
-			enemySprite,
-			g.player,
-		)
-	}
 	g.enemy.Update(g.player)
 	return nil
 }
@@ -66,16 +53,31 @@ func main() {
 		log.Fatal(err)
 	}
 
+	enemySprite, _, err := ebitenutil.NewImageFromFile("assets/enemyRed.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	player := NewPlayer(
+		screenWidthValue,
+		screenHeightValue,
+		speed,
+		mirrorSprite,
+		swordSprite,
+	)
+
+	enemy := NewEnemy(
+		screenWidthValue,
+		screenHeightValue,
+		1.0,
+		enemySprite,
+		player,
+	)
+
 	game := &Game{
-		input: NewInputManager(deadzone),
-		player: NewPlayer(
-			screenWidthValue,
-			screenHeightValue,
-			speed,
-			mirrorSprite,
-			swordSprite,
-		),
-		enemy: nil,
+		input:  NewInputManager(deadzone),
+		player: player,
+		enemy:  enemy,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {
