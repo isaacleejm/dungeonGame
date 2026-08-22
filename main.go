@@ -12,12 +12,34 @@ type Game struct {
 	input  *InputManager
 	player *Player
 	enemy  *Enemy
+	mirrorGame MirrorGame
 }
 
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState)
+
+	if g.enemy == nil {
+		enemySprite, _, err := ebitenutil.NewImageFromFile("assets/enemyRed.png")
+		if err != nil {
+			log.Fatal(err)
+		}
+		g.enemy = NewEnemy(
+			screenWidthValue,
+			screenHeightValue,
+			1.0,
+			enemySprite,
+			g.player,
+		)
+	}
+
 	g.enemy.Update(g.player)
+
+	if inputState.StartArrayAttack && g.player.SpellState == MirrorState {
+		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
+	}
+	g.mirrorGame.Update()
+
 	return nil
 }
 
@@ -26,6 +48,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{30, 30, 46, 0xff})
 	g.player.Draw(screen)
 	g.enemy.Draw(screen)
+	g.mirrorGame.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -88,11 +111,20 @@ func main() {
 		enemySprite,
 		player,
 	)
+	
+	beamSprite, _, err := ebitenutil.NewImageFromFile("assets/beam.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mirrorImage := ebiten.NewImage(50, 2)
+	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
 	game := &Game{
 		input:  NewInputManager(deadzone),
 		player: player,
 		enemy:  enemy,
+		mirrorGame: NewMirrorGame(beamSprite),
 	}
 
 	if err := ebiten.RunGame(game); err != nil {

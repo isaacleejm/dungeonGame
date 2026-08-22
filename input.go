@@ -13,6 +13,7 @@ type InputState struct {
 	HasAngleLock bool // True if aiming with mouse or moving stick
 	ToggleSpell  bool // True for a single frame on button press
 	StartAttack bool
+	StartArrayAttack bool
 }
 
 type InputManager struct {
@@ -22,6 +23,7 @@ type InputManager struct {
 	toggleBinding ActionBinding
 	attackBinding ActionBinding
 	beamAttackBinding ActionBinding
+	arrayAttackBinding ActionBinding
 }
 
 func NewInputManager(deadzone float64) *InputManager {
@@ -36,6 +38,11 @@ func NewInputManager(deadzone float64) *InputManager {
 			Key: ebiten.KeyK,
 			StandardButton: ebiten.StandardGamepadButtonRightRight,
 			RawButtonIndex: 1,
+		},
+		arrayAttackBinding: ActionBinding{
+			Key: ebiten.KeyF,
+			StandardButton: ebiten.StandardGamepadButtonRightRight,
+			RawButtonIndex: 2,
 		},
 	}
 }
@@ -52,6 +59,7 @@ func (im *InputManager) Poll(playerCenter Vector2) InputState {
 
 	id := im.gamepadIDs[0]
 	state.ToggleSpell = im.toggleBinding.JustPressedGamepad(id)
+	state.StartArrayAttack = im.arrayAttackBinding.JustPressedGamepad(id)
 
 	state.StartAttack = im.attackBinding.JustPressedGamepad(id)
 
@@ -90,6 +98,7 @@ func (im *InputManager) pollKBM(playerCenter Vector2) InputState {
 
 	state.ToggleSpell = im.toggleBinding.JustPressedKey()
 	state.StartAttack = im.attackBinding.JustPressedKey()
+	state.StartArrayAttack = im.arrayAttackBinding.JustPressedKey()
 
 	var kx, ky float64
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
@@ -104,7 +113,6 @@ func (im *InputManager) pollKBM(playerCenter Vector2) InputState {
 	if ebiten.IsKeyPressed(ebiten.KeyD) {
 		kx += 1.0
 	}
-
 
 	if kx != 0 || ky != 0 {
 		state.MoveX = kx
