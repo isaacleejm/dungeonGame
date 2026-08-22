@@ -8,21 +8,22 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+const MAX_SWORDS int = 10
+const MAX_ENEMIES int = 10
+
 type Game struct {
 	input            *InputManager
 	player           *Player
-	enemy            *Enemy
+	enemies          [MAX_ENEMIES]*Enemy
 	mirrorGame       MirrorGame
-	beamAttack     	 BeamAttack
-	multiSwordAttack [10]*Sword
-	multiSwordAttackSprite *ebiten.Image
-	blocks 					*Block
+	beamAttack       BeamAttack
+	blocks           *Block
+	multiSwordAttack [MAX_SWORDS]*Sword
 }
 
 func (g *Game) Update() error {
 	g.blocks.Update(150, 150)
 	inputState := g.input.Poll(g.player.Center())
-	g.enemy.Update(g.player, *g.blocks)
 	g.player.Update(inputState, *g.blocks)
 
 	g.beamAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
@@ -53,12 +54,17 @@ func (g *Game) Update() error {
 		}
 	}
 
+	for _, enemy := range g.enemies {
+		enemy.Update(g.player, *g.blocks)
+	}
 	for _, sword := range g.multiSwordAttack {
 		sword.Update(*g.blocks)
 		// Sword Collision with Enemy
-		if g.enemy.Alive && sword.Active && Collides(g.enemy.CollisionBounds(), sword.CollisionBounds()) {
-			sword.Active = false
-			g.enemy.Alive = false
+		for _, enemy := range g.enemies {
+			if enemy.Alive && sword.Active && Collides(enemy.CollisionBounds(), sword.CollisionBounds()) {
+				sword.Active = false
+				enemy.Alive = false
+			}
 		}
 	}
 
@@ -69,11 +75,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Background color
 	screen.Fill(color.RGBA{30, 30, 46, 0xff})
 	g.player.Draw(screen)
-	g.enemy.Draw(screen)
 	g.mirrorGame.Draw(screen)
 	g.beamAttack.Draw(screen)
 	g.blocks.Draw(screen)
 
+	for _, enemy := range g.enemies {
+		enemy.Draw(screen)
+	}
 	for _, sword := range g.multiSwordAttack {
 		sword.Draw(screen)
 	}
@@ -127,15 +135,6 @@ func main() {
 		swordSprite,
 	)
 
-	enemy := NewEnemy(
-		screenWidthValue,
-		screenHeightValue,
-		1.0,
-		enemySprite,
-		player,
-		true,
-	)
-
 	beamSprite, _, err := ebitenutil.NewImageFromFile("assets/beam.png")
 	if err != nil {
 		log.Fatal(err)
@@ -146,23 +145,22 @@ func main() {
 	mirrorImage := ebiten.NewImage(50, 2)
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
-	multiSwordAttack := [10]*Sword{
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
-		NewSword(5, swordAttackSprite, player, false, 0),
+	multiSwordAttack := [MAX_SWORDS]*Sword{}
+	for i := range multiSwordAttack {
+		multiSwordAttack[i] = NewSword(5, swordAttackSprite, player, false, 0)
+	}
+
+	enemies := [MAX_ENEMIES]*Enemy{}
+	enemyHealth := 5
+	enemySpeed := 1.0
+	for i := range enemies {
+		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, enemySpeed, enemySprite, player, true, enemyHealth)
 	}
 
 	game := &Game{
 		input:      NewInputManager(deadzone),
 		player:     player,
-		enemy:      enemy,
+		enemies:    enemies,
 		mirrorGame: NewMirrorGame(beamSprite),
 		beamAttack: BeamAttack{
 			attackState:   NotAttacking,
@@ -172,10 +170,9 @@ func main() {
 			rotation:      player.Rotation,
 			startRotation: player.Rotation,
 		},
-		multiSwordAttackSprite: swordAttackSprite,
-		multiSwordAttack:       multiSwordAttack,
+		multiSwordAttack: multiSwordAttack,
 		blocks: &Block{
-			Pos: Vector2{50, 50},
+			Pos:    Vector2{50, 50},
 			Sprite: dungeonBlockSprite,
 		},
 	}

@@ -14,9 +14,10 @@ type Enemy struct {
 	Sprite    *ebiten.Image
 	Alive     bool
 	Collision Vector4
+	Health    int
 }
 
-func NewEnemy(screenWidth, screenHeight int, speed float64, sprite *ebiten.Image, player *Player, alive bool) *Enemy {
+func NewEnemy(screenWidth, screenHeight int, speed float64, sprite *ebiten.Image, player *Player, alive bool, health int) *Enemy {
 	enemyBounds := sprite.Bounds()
 
 	enemyWidth := float64(enemyBounds.Dx())
@@ -61,6 +62,7 @@ func NewEnemy(screenWidth, screenHeight int, speed float64, sprite *ebiten.Image
 			Y1: 0,
 			Y2: enemyHeight,
 		},
+		Health: health,
 	}
 }
 
