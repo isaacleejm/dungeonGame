@@ -148,8 +148,10 @@ func main() {
 	}
 
 	enemies := [MAX_ENEMIES]*Enemy{}
+	enemyHealth := 5
+	enemySpeed := 1.0
 	for i := range enemies {
-		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, 1.0, enemySprite, player, true)
+		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, enemySpeed, enemySprite, player, true, enemyHealth)
 	}
 
 	game := &Game{
