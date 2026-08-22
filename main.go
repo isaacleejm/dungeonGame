@@ -9,10 +9,12 @@ import (
 )
 
 type Game struct {
-	input  *InputManager
-	player *Player
-	enemy  *Enemy
-	mirrorGame MirrorGame
+	input                  *InputManager
+	player                 *Player
+	enemy                  *Enemy
+	mirrorGame             MirrorGame
+	multiSwordAttack       [5]*Sword
+	multiSwordAttackSprite *ebiten.Image
 }
 
 func (g *Game) Update() error {
@@ -39,6 +41,15 @@ func (g *Game) Update() error {
 		g.mirrorGame.Cast(g.player.Center(), g.player.Rotation)
 	}
 	g.mirrorGame.Update()
+	if inputState.AreaSwordSpell {
+		print("pressed")
+		for _, sword := range g.multiSwordAttack {
+			sword.Shoot(g.player.Center(), g.player.Rotation)
+		}
+	}
+	for _, sword := range g.multiSwordAttack {
+		sword.Update()
+	}
 
 	return nil
 }
@@ -49,6 +60,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.player.Draw(screen)
 	g.enemy.Draw(screen)
 	g.mirrorGame.Draw(screen)
+	for _, sword := range g.multiSwordAttack {
+		sword.Draw(screen)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -91,6 +105,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	multiSwordAttackSprite, _, err := ebitenutil.NewImageFromFile("assets/sword.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	player := NewPlayer(
 		screenWidthValue,
 		screenHeightValue,
@@ -100,7 +119,7 @@ func main() {
 		&SingleAttack{
 			attackState: NotAttacking,
 			SwordSprite: swordAttackSprite,
-			BeamSprite: beamAttackSprite,
+			BeamSprite:  beamAttackSprite,
 		},
 	)
 
@@ -111,7 +130,7 @@ func main() {
 		enemySprite,
 		player,
 	)
-	
+
 	beamSprite, _, err := ebitenutil.NewImageFromFile("assets/beam.png")
 	if err != nil {
 		log.Fatal(err)
@@ -120,11 +139,21 @@ func main() {
 	mirrorImage := ebiten.NewImage(50, 2)
 	mirrorImage.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
 
+	multiSwordAttack := [5]*Sword{
+		NewSword(1, multiSwordAttackSprite, player, false, 0),
+		NewSword(1, multiSwordAttackSprite, player, false, 0),
+		NewSword(1, multiSwordAttackSprite, player, false, 0),
+		NewSword(1, multiSwordAttackSprite, player, false, 0),
+		NewSword(1, multiSwordAttackSprite, player, false, 0),
+	}
+
 	game := &Game{
-		input:  NewInputManager(deadzone),
-		player: player,
-		enemy:  enemy,
-		mirrorGame: NewMirrorGame(beamSprite),
+		input:                  NewInputManager(deadzone),
+		player:                 player,
+		enemy:                  enemy,
+		mirrorGame:             NewMirrorGame(beamSprite),
+		multiSwordAttackSprite: multiSwordAttackSprite,
+		multiSwordAttack:       multiSwordAttack,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {
