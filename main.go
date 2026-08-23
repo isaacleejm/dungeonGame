@@ -78,6 +78,7 @@ func (g *Game) Update() error {
 		g.player.Center(),
 		g.player.Rotation,
 		g.mirrorGame.Mirrors,
+		g.blocks,
 	)
 
 	if inputState.StartArrayAttack {
