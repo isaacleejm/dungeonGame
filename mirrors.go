@@ -88,6 +88,10 @@ func (m *MirrorManager) Update() {
 
 /// Parameters come from the Player
 func (m *MirrorManager) Cast(center Vector2, theta float64, blocks []*Block) {
+	if m.BeamState == ActiveBeam {
+		return
+	}
+
 	// Clear previous mirrors (todo: replace old ones gradually)
 	m.Mirrors = make([]Mirror, 0)
 
