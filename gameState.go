@@ -9,13 +9,13 @@ import (
 )
 
 type Health struct {
-	Value      float64
+	Value      int
 	Pos        Vector2
 	FontSource *text.GoTextFaceSource
 	GameFace   *text.GoTextFace
 }
 
-func NewHealth(value float64, position Vector2, fontSource *text.GoTextFaceSource, gameFace *text.GoTextFace) *Health {
+func NewHealth(value int, position Vector2, fontSource *text.GoTextFaceSource, gameFace *text.GoTextFace) *Health {
 	return &Health{
 		Value:      value,
 		Pos:        position,
@@ -24,9 +24,12 @@ func NewHealth(value float64, position Vector2, fontSource *text.GoTextFaceSourc
 	}
 }
 
-func (s *Health) Hit(damage float64) (defeat bool) {
+func (s *Health) Update(value int) {
+	s.Value = value
+}
+
+func (s *Health) Hit(damage int) {
 	s.Value -= damage
-	return s.Value <= 0
 }
 
 func (s *Health) Reset() {
@@ -34,7 +37,7 @@ func (s *Health) Reset() {
 }
 
 func (s *Health) Draw(screen *ebiten.Image) {
-	healthText := fmt.Sprintf("Health: %f", s.Value)
+	scoreText := fmt.Sprintf("Health: %d", s.Value)
 
 	background := ebiten.NewImage(130, 40)
 	background.Fill(color.RGBA{0, 0, 0, 180})
@@ -53,5 +56,5 @@ func (s *Health) Draw(screen *ebiten.Image) {
 		s.Pos.Y,
 	)
 
-	text.Draw(screen, healthText, s.GameFace, textOp)
+	text.Draw(screen, scoreText, s.GameFace, textOp)
 }

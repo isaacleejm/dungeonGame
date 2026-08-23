@@ -7,30 +7,32 @@ import (
 )
 
 type InputState struct {
-	MoveX            float64
-	MoveY            float64
-	TargetAngle      float64
-	HasAngleLock     bool // True if aiming with mouse or moving stick
-	ToggleSpell      bool // True for a single frame on button press
-	StartAttack      bool
-	StartArrayAttack bool
-	ThemeChange      bool
-	LayoutChange     bool
-	blockChange      bool
+	MoveX                 float64
+	MoveY                 float64
+	TargetAngle           float64
+	HasAngleLock          bool // True if aiming with mouse or moving stick
+	ToggleSpell           bool // True for a single frame on button press
+	StartAttack           bool
+	StartArrayAttack      bool
+	ThemeChange           bool
+	LayoutChange          bool
+	blockChange           bool
 	customisabilityChange bool
+	TogglePause            bool
 }
 
 type InputManager struct {
-	gamepadIDs         []ebiten.GamepadID
-	deadzone           float64
-	lastMousePos       Vector2
-	toggleBinding      ActionBinding
-	attackBinding      ActionBinding
-	arrayAttackBinding ActionBinding
-	themeBinding       ActionBinding
-	layoutBinding      ActionBinding
-	blockChangeBinding ActionBinding
+	gamepadIDs             []ebiten.GamepadID
+	deadzone               float64
+	lastMousePos           Vector2
+	toggleBinding          ActionBinding
+	attackBinding          ActionBinding
+	arrayAttackBinding     ActionBinding
+	themeBinding           ActionBinding
+	layoutBinding          ActionBinding
+	blockChangeBinding     ActionBinding
 	customisabilityBinding ActionBinding
+	pauseBinding           ActionBinding
 }
 
 func NewInputManager(deadzone float64) *InputManager {
@@ -67,9 +69,14 @@ func NewInputManager(deadzone float64) *InputManager {
 			RawButtonIndex: 5,
 		},
 		customisabilityBinding: ActionBinding{
-			Key: ebiten.KeyQ,
+			Key:            ebiten.KeyQ,
 			StandardButton: ebiten.StandardGamepadButtonLeftBottom,
 			RawButtonIndex: 6,
+		},
+		pauseBinding: ActionBinding{
+			Key:            ebiten.KeyEscape,
+			StandardButton: ebiten.StandardGamepadButtonCenterRight,
+			RawButtonIndex: 7,
 		},
 	}
 }
@@ -95,6 +102,7 @@ func (im *InputManager) Poll(playerCenter Vector2) InputState {
 	state.blockChange = im.blockChangeBinding.JustPressedGamepad(id)
 
 	state.customisabilityChange = im.customisabilityBinding.JustPressedGamepad(id)
+	state.TogglePause = im.pauseBinding.JustPressedGamepad(id)
 
 	var rawX, rawY float64
 
@@ -138,6 +146,7 @@ func (im *InputManager) pollKBM(playerCenter Vector2) InputState {
 	state.blockChange = im.blockChangeBinding.JustPressedKey()
 
 	state.customisabilityChange = im.customisabilityBinding.JustPressedKey()
+	state.TogglePause = im.pauseBinding.JustPressedKey()
 
 	var kx, ky float64
 	if ebiten.IsKeyPressed(ebiten.KeyW) {

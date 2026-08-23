@@ -13,13 +13,24 @@ import (
 )
 
 const MAX_SWORDS int = 10
-const MAX_ENEMIES int = 50
+
+type GameState int
+
+const (
+	Playing GameState = iota
+	Paused
+	GameOver
+)
+const MAX_ENEMIES = 10
+const ENEMY_QUOTA = 20
+const INITIAL_ENEMIES = 5
+const ENEMY_SPAWN_DELAY = 120
 
 type Game struct {
 	input                  *InputManager
 	player                 *Player
-	enemies                [MAX_ENEMIES]*Enemy
 	mirrorGame             MirrorManager
+	enemyManager           *EnemyManager
 	beamAttack             BeamAttack
 	multiSwordAttackSprite *ebiten.Image
 	blocks                 []*Block
@@ -34,6 +45,8 @@ type Game struct {
 	score            *Score
 	health           *Health
 	level 			*Level
+	state            GameState
+	gameFace         *text.GoTextFace
 }
 
 var backgroundList = []color.RGBA{
@@ -78,10 +91,28 @@ func (g *Game) UpdateLevel() {
 	g.background = currentLevel.Background
 
 	g.player.Pos = Vector2{80, 80}
+	g.enemyManager.ResetPositions(g.blocks)
 }
 
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
+
+	if g.state == GameOver && inputState.ToggleSpell {
+		g.state = Playing
+		g.health.Value = 5
+		return nil
+	}
+
+	if inputState.TogglePause {
+		switch g.state {
+		case Paused:
+			g.state = Playing
+		case Playing:
+			g.state = Paused
+		}
+		return nil
+	}
+
 	g.player.Update(inputState, g.blocks)
 
 	g.beamAttack.Update(
@@ -159,11 +190,27 @@ func (g *Game) Update() error {
 		g.UpdateLevel()
 	}
 
-	for _, enemy := range g.enemies {
-		enemy.Update(g.player, g.blocks)
+	g.enemyManager.Update(g.blocks)
+
+	var playerCollision Vector4
+	switch g.player.SpellState {
+	case MirrorState:
+		playerCollision = g.player.CollisionBoundsMirror()
+	case SwordState:
+		playerCollision = g.player.CollisionBoundsSword()
 	}
+
+	for _, enemy := range g.enemyManager.Enemies {
+		if Collides(playerCollision, enemy.CollisionBounds()) {
+			if g.health.Hit(0.05) {
+				g.state = GameOver
+			}
+		}
+	}
+
 	for _, sword := range g.multiSwordAttack {
 		sword.Update(g.blocks)
+
 		if sword.Active {
 			if g.damageEnemiesInBounds(sword.CollisionBounds(), false, 1) {
 				sword.Active = false
@@ -188,14 +235,12 @@ func (g *Game) Update() error {
 	g.checkBeamCollisions(g.beamAttack.BeamNodes, beamThickness)
 	g.checkBeamCollisions(g.mirrorGame.BeamNodes, beamThickness)
 
-	g.health.Update(g.player.Health)
-
 	return nil
 }
 
 func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool, damage float64) (hitSomething bool) {
-	for _, enemy := range g.enemies {
-		if enemy.Alive && Collides(bounds, enemy.CollisionBounds()) {
+	for _, enemy := range g.enemyManager.Enemies {
+		if enemy.Health > 0 && Collides(bounds, enemy.CollisionBounds()) {
 			hitSomething = true
 
 			if enemy.TakeDamage(damage) {
@@ -236,6 +281,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Background color
 	// screen.Fill(color.RGBA{30, 30, 46, 0xff})
 	screen.Fill(g.background)
+	switch g.state {
+	case GameOver:
+		text.Draw(screen, "Game Over", g.gameFace, nil)
+		return
+	case Paused:
+		text.Draw(screen, "Paused", g.gameFace, nil)
+		return
+	}
+
 	g.player.Draw(screen)
 	g.mirrorGame.Draw(screen)
 	g.beamAttack.Draw(screen)
@@ -244,9 +298,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		block.Draw(screen)
 	}
 
-	for _, enemy := range g.enemies {
-		enemy.Draw(screen)
-	}
+	g.enemyManager.Draw(screen)
+
 	for _, sword := range g.multiSwordAttack {
 		sword.Draw(screen)
 	}
@@ -351,21 +404,21 @@ func main() {
 		Backgrounds.Gray,
 	)
 
-	enemies := [MAX_ENEMIES]*Enemy{}
-	var enemyHealth float64 = 5
+	enemyHealth := 5.0
 	enemySpeed := 1.0
-	for i := range enemies {
-		enemies[i] = NewEnemy(
-			screenWidthValue,
-			screenHeightValue,
-			enemySpeed,
-			enemySprite,
-			player,
-			true,
-			enemyHealth,
-			currentLevel.Blocks,
-		)
-	}
+	enemyManager := NewEnemyManager(
+		MAX_ENEMIES,
+		ENEMY_QUOTA,
+		INITIAL_ENEMIES,
+		ENEMY_SPAWN_DELAY,
+		screenWidthValue,
+		screenHeightValue,
+		enemySpeed,
+		enemyHealth,
+		enemySprite,
+		player,
+		currentLevel.Blocks,
+	)
 
 	fontSource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 	if err != nil {
@@ -378,10 +431,10 @@ func main() {
 	}
 
 	game := &Game{
-		input:      NewInputManager(deadzone),
-		player:     player,
-		enemies:    enemies,
-		mirrorGame: NewMirrorGame(beamSprite),
+		input:        NewInputManager(deadzone),
+		player:       player,
+		enemyManager: enemyManager,
+		mirrorGame:   NewMirrorGame(beamSprite),
 		beamAttack: BeamAttack{
 			attackState:   NotAttacking,
 			BeamSprite:    beamAttackSprite,
@@ -406,7 +459,7 @@ func main() {
 			gameFace,
 		),
 		health: NewHealth(
-			player.Health,
+			5,
 			Vector2{X: 25, Y: 0},
 			fontSource,
 			gameFace,
@@ -416,6 +469,7 @@ func main() {
 			fontSource,
 			gameFace,
 		),
+		gameFace: gameFace,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {
