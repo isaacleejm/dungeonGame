@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"image/color"
 	"log"
-	_ "embed"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -82,23 +82,23 @@ func (g *Game) Update() error {
 
 	if inputState.StartArrayAttack {
 		switch g.player.SpellState {
-			case MirrorState:
-				g.mirrorGame.Cast(
-					g.player.Center(),
-					g.player.Rotation,
-					g.blocks,
-				)
+		case MirrorState:
+			g.mirrorGame.Cast(
+				g.player.Center(),
+				g.player.Rotation,
+				g.blocks,
+			)
 
-			case SwordState:
-				count := 0
-				for _, sword := range g.multiSwordAttack {
-					if sword.ShootRandom(g.player.Center(), g.player.Rotation) {
-						count++
-					}
-					if count > 4 {
-						break
-					}
+		case SwordState:
+			count := 0
+			for _, sword := range g.multiSwordAttack {
+				if sword.ShootRandom(g.player.Center(), g.player.Rotation) {
+					count++
 				}
+				if count > 4 {
+					break
+				}
+			}
 		}
 	}
 
@@ -306,18 +306,19 @@ func main() {
 		multiSwordAttack[i] = NewSword(5, swordAttackSprite, player, false, 0)
 	}
 
-	enemies := [MAX_ENEMIES]*Enemy{}
-	enemyHealth := 5
-	enemySpeed := 1.0
-	for i := range enemies {
-		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, enemySpeed, enemySprite, player, true, enemyHealth)
-	}
-
 	currentLevel := BlocksFromLayout(
 		Layouts.Layout1,
 		logBlockSprite,
 		Backgrounds.Gray,
 	)
+
+	enemies := [MAX_ENEMIES]*Enemy{}
+	enemyHealth := 5
+	enemySpeed := 1.0
+	for i := range enemies {
+		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, enemySpeed, enemySprite, player, true, enemyHealth, currentLevel.Blocks)
+	}
+
 	fontSource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 	if err != nil {
 		log.Fatal(err)
