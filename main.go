@@ -29,6 +29,8 @@ type Game struct {
 	layoutIndex int
 	themeIndex  int
 
+	level int
+
 	blockSpriteList  []*ebiten.Image
 	multiSwordAttack [MAX_SWORDS]*Sword
 	score            *Score
@@ -169,6 +171,7 @@ func (g *Game) Update() error {
 
 				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
 					g.layoutIndex++
+					g.level++
 
 					if g.layoutIndex >= len(layoutList) {
 						g.layoutIndex = 0
@@ -200,6 +203,7 @@ func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool) (hitSomething 
 
 				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
 					g.layoutIndex++
+					g.level++
 
 					if g.layoutIndex >= len(layoutList) {
 						g.layoutIndex = 0
@@ -384,6 +388,8 @@ func main() {
 		blockIndex:  0,
 		layoutIndex: 0,
 		themeIndex:  0,
+
+		level: 1,
 
 		blockSpriteList: blockSpriteList,
 		score: NewScore(
