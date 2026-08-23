@@ -367,11 +367,6 @@ func main() {
 		)
 	}
 
-	currentLevel := BlocksFromLayout(
-		Layouts.Layout1,
-		blockSpriteList[0],
-		Backgrounds.Gray,
-	)
 	fontSource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 	if err != nil {
 		log.Fatal(err)
