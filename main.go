@@ -44,6 +44,7 @@ type Game struct {
 	score            *Score
 	health           *Health
 	state            GameState
+	gameFace         *text.GoTextFace
 }
 
 var backgroundList = []color.RGBA{
@@ -92,6 +93,11 @@ func (g *Game) UpdateLevel() {
 
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
+	if g.state == GameOver && inputState.ToggleSpell {
+		g.state = Playing
+		g.health.Value = 5
+	}
+
 	g.player.Update(inputState, g.blocks)
 
 	g.beamAttack.Update(
@@ -259,6 +265,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Background color
 	// screen.Fill(color.RGBA{30, 30, 46, 0xff})
 	screen.Fill(g.background)
+	switch g.state {
+	case GameOver:
+		text.Draw(screen, "Game Over", g.gameFace, nil)
+		return
+	}
+
 	g.player.Draw(screen)
 	g.mirrorGame.Draw(screen)
 	g.beamAttack.Draw(screen)
@@ -435,6 +447,7 @@ func main() {
 			fontSource,
 			gameFace,
 		),
+		gameFace: gameFace,
 	}
 
 	if err := ebiten.RunGame(game); err != nil {
