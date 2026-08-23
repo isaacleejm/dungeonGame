@@ -188,7 +188,7 @@ func (g *Game) checkBeamCollisions(nodes []Vector2, thickness float64) {
 	for i := 0; i < len(nodes)-1; i++ {
 		A := nodes[i]
 		B := nodes[i+1]
-		
+
 		bounds := BeamSegmentBounds(A, B, thickness)
 		g.damageEnemiesInBounds(bounds, true)
 	}
@@ -359,7 +359,7 @@ func main() {
 		),
 		health: NewHealth(
 			player.Health,
-			Vector2{X: screenWidthValue/2 - 50, Y: 0},
+			Vector2{X: 0, Y: 0},
 			fontSource,
 			gameFace,
 		),
