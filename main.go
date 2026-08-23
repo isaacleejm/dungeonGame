@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"image/color"
 	"log"
-	_ "embed"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -13,7 +13,7 @@ import (
 )
 
 const MAX_SWORDS int = 10
-const MAX_ENEMIES int = 10
+const MAX_ENEMIES int = 50
 
 type Game struct {
 	input                  *InputManager
@@ -29,7 +29,8 @@ type Game struct {
 	layoutIndex int
 	themeIndex  int
 
-	blockSprite      *ebiten.Image
+	level int
+
 	blockSpriteList  []*ebiten.Image
 	multiSwordAttack [MAX_SWORDS]*Sword
 	score            *Score
@@ -57,15 +58,27 @@ var layoutList = [][]string{
 	Layouts.Layout10,
 }
 
+var levelScoreThresholds = []int{
+	10,
+	25,
+	45,
+	70,
+	100,
+}
+
+var customisablePermissions = false
+
 func (g *Game) UpdateLevel() {
 	currentLevel := BlocksFromLayout(
 		layoutList[g.layoutIndex],
-		g.blockSprite,
+		g.blockSpriteList[g.blockIndex],
 		backgroundList[g.themeIndex],
 	)
 
 	g.blocks = currentLevel.Blocks
 	g.background = currentLevel.Background
+
+	g.player.Pos = Vector2{80, 80}
 }
 
 func (g *Game) Update() error {
@@ -83,27 +96,31 @@ func (g *Game) Update() error {
 
 	if inputState.StartArrayAttack {
 		switch g.player.SpellState {
-			case MirrorState:
-				g.mirrorGame.Cast(
-					g.player.Center(),
-					g.player.Rotation,
-					g.blocks,
-				)
+		case MirrorState:
+			g.mirrorGame.Cast(
+				g.player.Center(),
+				g.player.Rotation,
+				g.blocks,
+			)
 
-			case SwordState:
-				count := 0
-				for _, sword := range g.multiSwordAttack {
-					if sword.ShootRandom(g.player.Center(), g.player.Rotation) {
-						count++
-					}
-					if count > 4 {
-						break
-					}
+		case SwordState:
+			count := 0
+			for _, sword := range g.multiSwordAttack {
+				if sword.ShootRandom(g.player.Center(), g.player.Rotation) {
+					count++
 				}
+				if count > 4 {
+					break
+				}
+			}
 		}
 	}
 
 	g.mirrorGame.Update()
+
+	if inputState.customisabilityChange {
+		customisablePermissions = !customisablePermissions
+	}
 
 	if inputState.StartAttack && g.player.SpellState == SwordState {
 		for _, sword := range g.multiSwordAttack {
@@ -113,19 +130,17 @@ func (g *Game) Update() error {
 		}
 	}
 
-	if inputState.blockChange {
+	if inputState.blockChange && customisablePermissions {
 		g.blockIndex++
 
 		if g.blockIndex >= len(g.blockSpriteList) {
 			g.blockIndex = 0
 		}
 
-		g.blockSprite = g.blockSpriteList[g.blockIndex]
-
 		g.UpdateLevel()
 	}
 
-	if inputState.LayoutChange {
+	if inputState.LayoutChange && customisablePermissions {
 		g.layoutIndex++
 
 		if g.layoutIndex >= len(layoutList) {
@@ -135,7 +150,7 @@ func (g *Game) Update() error {
 		g.UpdateLevel()
 	}
 
-	if inputState.ThemeChange {
+	if inputState.ThemeChange && customisablePermissions {
 		g.themeIndex++
 
 		if g.themeIndex >= len(backgroundList) {
@@ -153,6 +168,18 @@ func (g *Game) Update() error {
 		if sword.Active {
 			if g.damageEnemiesInBounds(sword.CollisionBounds(), false, 1) {
 				sword.Active = false
+				g.score.Add(1)
+
+				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
+					g.layoutIndex++
+					g.level++
+
+					if g.layoutIndex >= len(layoutList) {
+						g.layoutIndex = 0
+					}
+
+					g.UpdateLevel()
+				}
 			}
 		}
 	}
@@ -174,6 +201,17 @@ func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool, damage float64
 
 			if enemy.TakeDamage(damage) {
 				g.score.Add(1)
+
+				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
+					g.layoutIndex++
+					g.level++
+
+					if g.layoutIndex >= len(layoutList) {
+						g.layoutIndex = 0
+					}
+
+					g.UpdateLevel()
+				}
 			}
 
 			// If the attack doesn't pierce (sword), stop checking other enemies
@@ -189,7 +227,7 @@ func (g *Game) checkBeamCollisions(nodes []Vector2, thickness float64) {
 	for i := 0; i < len(nodes)-1; i++ {
 		A := nodes[i]
 		B := nodes[i+1]
-		
+
 		bounds := BeamSegmentBounds(A, B, thickness)
 		g.damageEnemiesInBounds(bounds, true, 0.01*float64(i))
 	}
@@ -281,8 +319,8 @@ func main() {
 	}
 
 	blockSpriteList := []*ebiten.Image{
-		brickBlockSprite,
 		dungeonBlockSprite,
+		brickBlockSprite,
 		logBlockSprite,
 	}
 
@@ -307,6 +345,12 @@ func main() {
 		multiSwordAttack[i] = NewSword(5, swordAttackSprite, player, false, 0)
 	}
 
+	currentLevel := BlocksFromLayout(
+		Layouts.Layout1,
+		blockSpriteList[0],
+		Backgrounds.Gray,
+	)
+
 	enemies := [MAX_ENEMIES]*Enemy{}
 	var enemyHealth float64 = 5
 	enemySpeed := 1.0
@@ -319,14 +363,10 @@ func main() {
 			player,
 			true,
 			enemyHealth,
+			currentLevel.Blocks,
 		)
 	}
 
-	currentLevel := BlocksFromLayout(
-		Layouts.Layout1,
-		logBlockSprite,
-		Backgrounds.Gray,
-	)
 	fontSource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 	if err != nil {
 		log.Fatal(err)
@@ -354,11 +394,13 @@ func main() {
 		multiSwordAttack:       multiSwordAttack,
 		blocks:                 currentLevel.Blocks,
 		background:             currentLevel.Background,
-		blockIndex:             0,
-		layoutIndex:            0,
-		themeIndex:             0,
 
-		blockSprite:     blockSpriteList[0],
+		blockIndex:  0,
+		layoutIndex: 0,
+		themeIndex:  0,
+
+		level: 1,
+
 		blockSpriteList: blockSpriteList,
 		score: NewScore(
 			Vector2{X: screenWidthValue - 125, Y: 0},
@@ -367,7 +409,7 @@ func main() {
 		),
 		health: NewHealth(
 			player.Health,
-			Vector2{X: screenWidthValue/2 - 50, Y: 0},
+			Vector2{X: 0, Y: 0},
 			fontSource,
 			gameFace,
 		),

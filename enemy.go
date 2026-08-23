@@ -24,15 +24,58 @@ func NewEnemy(
 	player *Player,
 	alive bool,
 	health float64,
+	blocks []*Block,
 ) *Enemy {
 	enemyBounds := sprite.Bounds()
 
 	enemyWidth := float64(enemyBounds.Dx())
 	enemyHeight := float64(enemyBounds.Dy())
 
+	enemy := &Enemy{
+		Pos:    Vector2{},
+		Speed:  speed,
+		Sprite: sprite,
+		Alive:  alive,
+		Collision: Vector4{
+			X1: 0,
+			X2: enemyWidth,
+			Y1: 0,
+			Y2: enemyHeight,
+		},
+		Health: health,
+	}
+	enemy.Respawn(screenWidth, screenHeight, player, blocks)
+
+	return enemy
+}
+
+func (e *Enemy) Center() Vector2 {
+	bounds := e.Sprite.Bounds()
+	return Vector2{
+		X: e.Pos.X + float64(bounds.Dx())/2,
+		Y: e.Pos.Y + float64(bounds.Dy())/2,
+	}
+}
+
+func (e *Enemy) CollisionBounds() Vector4 {
+	bounds := e.Sprite.Bounds()
+
+	return Vector4{
+		X1: e.Pos.X,
+		Y1: e.Pos.Y,
+		X2: e.Pos.X + float64(bounds.Dx()),
+		Y2: e.Pos.Y + float64(bounds.Dy()),
+	}
+}
+
+func (e *Enemy) Respawn(screenWidth int, screenHeight int, player *Player, blocks []*Block) {
+	bounds := e.Sprite.Bounds()
+
+	enemyWidth := float64(bounds.Dx())
+	enemyHeight := float64(bounds.Dy())
+
 	playerCenter := player.Center()
 
-	// Distance from player enemy can spawn
 	const minDistance = 100.0
 
 	var startX, startY float64
@@ -52,44 +95,45 @@ func NewEnemy(
 
 		distance := math.Hypot(dx, dy)
 
-		// Break if enemy is far enough from player
-		if distance >= minDistance {
-			break
+		// Enemy is too close to player.
+		if distance < minDistance {
+			continue
 		}
+
+		// Collision bounds for the potential spawn position.
+		enemyBounds := Vector4{
+			X1: startX,
+			Y1: startY,
+			X2: startX + enemyWidth,
+			Y2: startY + enemyHeight,
+		}
+
+		// Check if the potential position overlaps a block.
+		colliding := false
+
+		for _, block := range blocks {
+			if Collides(enemyBounds, block.CollisionBounds()) {
+				colliding = true
+				break
+			}
+		}
+
+		// Position is inside a block.
+		if colliding {
+			continue
+		}
+
+		// Valid position found.
+		break
 	}
 
-	return &Enemy{
-		Pos:    Vector2{X: startX, Y: startY},
-		Speed:  speed,
-		Sprite: sprite,
-		Alive:  alive,
-		Collision: Vector4{
-			X1: 0,
-			X2: enemyWidth,
-			Y1: 0,
-			Y2: enemyHeight,
-		},
-		Health: health,
-	}
-}
+	// Set the new position.
+	e.Pos.X = startX
+	e.Pos.Y = startY
 
-func (e *Enemy) Center() Vector2 {
-	bounds := e.Sprite.Bounds()
-	return Vector2{
-		X: e.Pos.X + float64(bounds.Dx())/2,
-		Y: e.Pos.Y + float64(bounds.Dy())/2,
-	}
-}
-
-func (e *Enemy) CollisionBounds() Vector4 {
-	bounds := e.Sprite.Bounds()
-
-	return Vector4{
-		X1: e.Center().X,
-		Y1: e.Center().Y,
-		X2: e.Center().X + float64(bounds.Dx()),
-		Y2: e.Center().Y + float64(bounds.Dy()),
-	}
+	// Reset enemy state.
+	e.Alive = true
+	e.Health = 5
 }
 
 func (e *Enemy) Update(p *Player, blocks []*Block) {
@@ -149,11 +193,9 @@ func (e *Enemy) Draw(screen *ebiten.Image) {
 	if !e.Alive {
 		return
 	}
-	bounds := e.Sprite.Bounds()
-	width, height := float64(bounds.Dx()), float64(bounds.Dy())
 
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(e.Pos.X+width/2, e.Pos.Y+height/2)
+	op.GeoM.Translate(e.Pos.X, e.Pos.Y)
 
 	screen.DrawImage(e.Sprite, op)
 }
