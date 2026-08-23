@@ -254,6 +254,16 @@ func (m *EnemyManager) ResetPositions(blocks []*Block) {
 	}
 }
 
+func (m *EnemyManager) Reset(blocks []*Block) {
+	m.Enemies = make([]*Enemy, 0)
+	m.EnemiesSpawned = 0
+	m.SpawnTimer = 0
+
+	for i := 0; i < INITIAL_ENEMIES; i++ {
+		m.Spawn(blocks)
+	}
+}
+
 func (e *Enemy) Update(p *Player, blocks []*Block) {
 	if e.Health <= 0 {
 		return

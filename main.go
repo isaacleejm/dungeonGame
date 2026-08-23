@@ -109,7 +109,20 @@ func (g *Game) Update() error {
 
 	if g.state == GameOver && inputState.ToggleSpell {
 		g.state = Playing
+
 		g.health.Value = INITIAL_HEALTH
+		g.score.Value = 0
+
+		g.layoutIndex = 0
+		g.level.Value = 1
+
+		g.blockIndex = 0
+		g.themeIndex = 0
+
+		g.UpdateLevel()
+		g.enemyManager.Reset(g.blocks)
+		g.mirrorGame.Mirrors = make([]Mirror, 0)
+
 		return nil
 	}
 
@@ -272,7 +285,7 @@ func (g *Game) checkBeamCollisions(nodes []Vector2, thickness float64) {
 		g.damageEnemiesInBounds(
 			bounds,
 			true,
-			0.03 * float64(g.layoutIndex+1) * float64(i),
+			0.03*float64(g.layoutIndex+1)*float64(i),
 		)
 	}
 }
