@@ -17,6 +17,7 @@ type InputState struct {
 	ThemeChange      bool
 	LayoutChange     bool
 	blockChange      bool
+	customisabilityChange bool
 }
 
 type InputManager struct {
@@ -29,6 +30,7 @@ type InputManager struct {
 	themeBinding       ActionBinding
 	layoutBinding      ActionBinding
 	blockChangeBinding ActionBinding
+	customisabilityBinding ActionBinding
 }
 
 func NewInputManager(deadzone float64) *InputManager {
@@ -51,18 +53,23 @@ func NewInputManager(deadzone float64) *InputManager {
 		},
 		themeBinding: ActionBinding{
 			Key:            ebiten.KeyT,
-			StandardButton: ebiten.StandardGamepadButtonLeftBottom,
+			StandardButton: ebiten.StandardGamepadButtonLeftLeft,
 			RawButtonIndex: 3,
 		},
 		layoutBinding: ActionBinding{
 			Key:            ebiten.KeyL,
-			StandardButton: ebiten.StandardGamepadButtonLeftLeft,
+			StandardButton: ebiten.StandardGamepadButtonLeftTop,
 			RawButtonIndex: 4,
 		},
 		blockChangeBinding: ActionBinding{
 			Key:            ebiten.KeyB,
-			StandardButton: ebiten.StandardGamepadButtonLeftTop,
+			StandardButton: ebiten.StandardGamepadButtonLeftRight,
 			RawButtonIndex: 5,
+		},
+		customisabilityBinding: ActionBinding{
+			Key: ebiten.KeyQ,
+			StandardButton: ebiten.StandardGamepadButtonLeftBottom,
+			RawButtonIndex: 6,
 		},
 	}
 }
@@ -86,6 +93,8 @@ func (im *InputManager) Poll(playerCenter Vector2) InputState {
 	state.ThemeChange = im.themeBinding.JustPressedGamepad(id)
 	state.LayoutChange = im.layoutBinding.JustPressedGamepad(id)
 	state.blockChange = im.blockChangeBinding.JustPressedGamepad(id)
+
+	state.customisabilityChange = im.customisabilityBinding.JustPressedGamepad(id)
 
 	var rawX, rawY float64
 
@@ -127,6 +136,8 @@ func (im *InputManager) pollKBM(playerCenter Vector2) InputState {
 	state.ThemeChange = im.themeBinding.JustPressedKey()
 	state.LayoutChange = im.layoutBinding.JustPressedKey()
 	state.blockChange = im.blockChangeBinding.JustPressedKey()
+
+	state.customisabilityChange = im.customisabilityBinding.JustPressedKey()
 
 	var kx, ky float64
 	if ebiten.IsKeyPressed(ebiten.KeyW) {

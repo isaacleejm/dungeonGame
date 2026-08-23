@@ -13,7 +13,7 @@ import (
 )
 
 const MAX_SWORDS int = 10
-const MAX_ENEMIES int = 10
+const MAX_ENEMIES int = 50
 
 type Game struct {
 	input                  *InputManager
@@ -29,7 +29,6 @@ type Game struct {
 	layoutIndex int
 	themeIndex  int
 
-	blockSprite      *ebiten.Image
 	blockSpriteList  []*ebiten.Image
 	multiSwordAttack [MAX_SWORDS]*Sword
 	score            *Score
@@ -57,10 +56,20 @@ var layoutList = [][]string{
 	Layouts.Layout10,
 }
 
+var levelScoreThresholds = []int{
+	10,
+	25,
+	45,
+	70,
+	100,
+}
+
+var customisablePermissions = false
+
 func (g *Game) UpdateLevel() {
 	currentLevel := BlocksFromLayout(
 		layoutList[g.layoutIndex],
-		g.blockSprite,
+		g.blockSpriteList[g.blockIndex],
 		backgroundList[g.themeIndex],
 	)
 
@@ -104,6 +113,10 @@ func (g *Game) Update() error {
 
 	g.mirrorGame.Update()
 
+	if inputState.customisabilityChange {
+		customisablePermissions = !customisablePermissions
+	}
+
 	if inputState.StartAttack && g.player.SpellState == SwordState {
 		for _, sword := range g.multiSwordAttack {
 			if sword.Shoot(g.player.Center(), g.player.Rotation) {
@@ -112,19 +125,17 @@ func (g *Game) Update() error {
 		}
 	}
 
-	if inputState.blockChange {
+	if inputState.blockChange && customisablePermissions {
 		g.blockIndex++
 
 		if g.blockIndex >= len(g.blockSpriteList) {
 			g.blockIndex = 0
 		}
 
-		g.blockSprite = g.blockSpriteList[g.blockIndex]
-
 		g.UpdateLevel()
 	}
 
-	if inputState.LayoutChange {
+	if inputState.LayoutChange && customisablePermissions {
 		g.layoutIndex++
 
 		if g.layoutIndex >= len(layoutList) {
@@ -134,7 +145,7 @@ func (g *Game) Update() error {
 		g.UpdateLevel()
 	}
 
-	if inputState.ThemeChange {
+	if inputState.ThemeChange && customisablePermissions {
 		g.themeIndex++
 
 		if g.themeIndex >= len(backgroundList) {
@@ -155,6 +166,16 @@ func (g *Game) Update() error {
 				sword.Active = false
 				if enemy.TakeDamage(1) {
 					g.score.Add(1)
+
+					if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
+						g.layoutIndex++
+
+						if g.layoutIndex >= len(layoutList) {
+							g.layoutIndex = 0
+						}
+
+						g.UpdateLevel()
+					}
 				}
 			}
 		}
@@ -251,8 +272,8 @@ func main() {
 	}
 
 	blockSpriteList := []*ebiten.Image{
-		brickBlockSprite,
 		dungeonBlockSprite,
+		brickBlockSprite,
 		logBlockSprite,
 	}
 
@@ -286,7 +307,7 @@ func main() {
 
 	currentLevel := BlocksFromLayout(
 		Layouts.Layout1,
-		logBlockSprite,
+		blockSpriteList[0],
 		Backgrounds.Gray,
 	)
 	fontSource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
@@ -316,11 +337,11 @@ func main() {
 		multiSwordAttack:       multiSwordAttack,
 		blocks:                 currentLevel.Blocks,
 		background:             currentLevel.Background,
+
 		blockIndex:             0,
 		layoutIndex:            0,
 		themeIndex:             0,
 
-		blockSprite:     blockSpriteList[0],
 		blockSpriteList: blockSpriteList,
 		score: NewScore(
 			Vector2{X: screenWidthValue - 125, Y: 0},
