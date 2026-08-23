@@ -22,7 +22,6 @@ const (
 	GameOver
 )
 const MAX_ENEMIES = 10
-const ENEMY_QUOTA = 20
 const INITIAL_ENEMIES = 5
 const ENEMY_SPAWN_DELAY = 120
 const INITIAL_HEALTH = 10
@@ -45,7 +44,7 @@ type Game struct {
 	multiSwordAttack [MAX_SWORDS]*Sword
 	score            *Score
 	health           *Health
-	level 			*Level
+	level            *Level
 	state            GameState
 	gameFace         *text.GoTextFace
 }
@@ -77,6 +76,11 @@ var levelScoreThresholds = []int{
 	45,
 	70,
 	100,
+	135,
+	175,
+	220,
+	270,
+	325,
 }
 
 var customisablePermissions = false
@@ -92,6 +96,11 @@ func (g *Game) UpdateLevel() {
 	g.background = currentLevel.Background
 
 	g.player.Pos = Vector2{80, 80}
+
+	if g.layoutIndex < len(levelScoreThresholds) {
+		g.enemyManager.EnemyQuota = levelScoreThresholds[g.layoutIndex]
+	}
+
 	g.enemyManager.ResetPositions(g.blocks)
 }
 
@@ -215,18 +224,6 @@ func (g *Game) Update() error {
 		if sword.Active {
 			if g.damageEnemiesInBounds(sword.CollisionBounds(), false, 1) {
 				sword.Active = false
-				g.score.Add(1)
-
-				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
-					g.layoutIndex++
-					g.level.Add(1)
-
-					if g.layoutIndex >= len(layoutList) {
-						g.layoutIndex = 0
-					}
-
-					g.UpdateLevel()
-				}
 			}
 		}
 	}
@@ -247,13 +244,11 @@ func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool, damage float64
 			if enemy.TakeDamage(damage) {
 				g.score.Add(1)
 
-				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
+				if g.layoutIndex < len(levelScoreThresholds)-1 &&
+					g.score.Value >= levelScoreThresholds[g.layoutIndex] {
+
 					g.layoutIndex++
 					g.level.Add(1)
-
-					if g.layoutIndex >= len(layoutList) {
-						g.layoutIndex = 0
-					}
 
 					g.UpdateLevel()
 				}
@@ -413,7 +408,7 @@ func main() {
 	enemySpeed := 1.0
 	enemyManager := NewEnemyManager(
 		MAX_ENEMIES,
-		ENEMY_QUOTA,
+		levelScoreThresholds[0],
 		INITIAL_ENEMIES,
 		ENEMY_SPAWN_DELAY,
 		screenWidthValue,
@@ -470,7 +465,7 @@ func main() {
 			gameFace,
 		),
 		level: NewLevel(
-			Vector2{X: screenWidthValue/2-75, Y: 0},
+			Vector2{X: screenWidthValue/2 - 75, Y: 0},
 			fontSource,
 			gameFace,
 		),
