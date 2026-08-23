@@ -25,6 +25,7 @@ const MAX_ENEMIES = 10
 const ENEMY_QUOTA = 20
 const INITIAL_ENEMIES = 5
 const ENEMY_SPAWN_DELAY = 120
+const INITIAL_HEALTH = 10
 
 type Game struct {
 	input                  *InputManager
@@ -99,7 +100,7 @@ func (g *Game) Update() error {
 
 	if g.state == GameOver && inputState.ToggleSpell {
 		g.state = Playing
-		g.health.Value = 5
+		g.health.Value = INITIAL_HEALTH
 		return nil
 	}
 
@@ -273,7 +274,11 @@ func (g *Game) checkBeamCollisions(nodes []Vector2, thickness float64) {
 		B := nodes[i+1]
 
 		bounds := BeamSegmentBounds(A, B, thickness)
-		g.damageEnemiesInBounds(bounds, true, 0.01*float64(i))
+		g.damageEnemiesInBounds(
+			bounds,
+			true,
+			0.03 * float64(g.layoutIndex+1) * float64(i),
+		)
 	}
 }
 
@@ -459,7 +464,7 @@ func main() {
 			gameFace,
 		),
 		health: NewHealth(
-			5,
+			INITIAL_HEALTH,
 			Vector2{X: 25, Y: 0},
 			fontSource,
 			gameFace,
