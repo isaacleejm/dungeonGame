@@ -285,7 +285,7 @@ func (g *Game) checkBeamCollisions(nodes []Vector2, thickness float64) {
 		g.damageEnemiesInBounds(
 			bounds,
 			true,
-			0.03*float64(g.layoutIndex+1)*float64(i),
+			0.01*float64(g.layoutIndex+1)*float64(i),
 		)
 	}
 }
