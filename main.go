@@ -29,12 +29,11 @@ type Game struct {
 	layoutIndex int
 	themeIndex  int
 
-	level int
-
 	blockSpriteList  []*ebiten.Image
 	multiSwordAttack [MAX_SWORDS]*Sword
 	score            *Score
 	health           *Health
+	level 			*Level
 }
 
 var backgroundList = []color.RGBA{
@@ -171,7 +170,7 @@ func (g *Game) Update() error {
 
 				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
 					g.layoutIndex++
-					g.level++
+					g.level.Add(1)
 
 					if g.layoutIndex >= len(layoutList) {
 						g.layoutIndex = 0
@@ -203,7 +202,7 @@ func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool) (hitSomething 
 
 				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
 					g.layoutIndex++
-					g.level++
+					g.level.Add(1)
 
 					if g.layoutIndex >= len(layoutList) {
 						g.layoutIndex = 0
@@ -252,6 +251,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	g.score.Draw(screen)
 	g.health.Draw(screen)
+	g.level.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -357,11 +357,6 @@ func main() {
 		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, enemySpeed, enemySprite, player, true, enemyHealth, currentLevel.Blocks)
 	}
 
-	currentLevel := BlocksFromLayout(
-		Layouts.Layout1,
-		blockSpriteList[0],
-		Backgrounds.Gray,
-	)
 	fontSource, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
 	if err != nil {
 		log.Fatal(err)
@@ -394,8 +389,6 @@ func main() {
 		layoutIndex: 0,
 		themeIndex:  0,
 
-		level: 1,
-
 		blockSpriteList: blockSpriteList,
 		score: NewScore(
 			Vector2{X: screenWidthValue - 125, Y: 0},
@@ -404,7 +397,12 @@ func main() {
 		),
 		health: NewHealth(
 			player.Health,
-			Vector2{X: 0, Y: 0},
+			Vector2{X: 25, Y: 0},
+			fontSource,
+			gameFace,
+		),
+		level: NewLevel(
+			Vector2{X: screenWidthValue/2-75, Y: 0},
 			fontSource,
 			gameFace,
 		),

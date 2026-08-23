@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -36,13 +37,24 @@ func (s *Health) Reset() {
 }
 
 func (s *Health) Draw(screen *ebiten.Image) {
-	healthText := fmt.Sprintf("Health: %d", s.Value)
+	scoreText := fmt.Sprintf("Health: %d", s.Value)
 
-	op := &text.DrawOptions{}
+	background := ebiten.NewImage(130, 40)
+	background.Fill(color.RGBA{0, 0, 0, 180})
+
+	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(
+		s.Pos.X-10,
+		s.Pos.Y-5,
+	)
+
+	screen.DrawImage(background, op)
+
+	textOp := &text.DrawOptions{}
+	textOp.GeoM.Translate(
 		s.Pos.X,
 		s.Pos.Y,
 	)
 
-	text.Draw(screen, healthText, s.GameFace, op)
+	text.Draw(screen, scoreText, s.GameFace, textOp)
 }

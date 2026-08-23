@@ -8,32 +8,32 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
-type Score struct {
+type Level struct {
 	Value      int
 	Pos        Vector2
 	FontSource *text.GoTextFaceSource
 	GameFace   *text.GoTextFace
 }
 
-func NewScore(position Vector2, fontSource *text.GoTextFaceSource, gameFace *text.GoTextFace) *Score {
-	return &Score{
-		Value:      0,
+func NewLevel(position Vector2, fontSource *text.GoTextFaceSource, gameFace *text.GoTextFace) *Level {
+	return &Level{
+		Value:      1,
 		Pos:        position,
 		FontSource: fontSource,
 		GameFace:   gameFace,
 	}
 }
 
-func (s *Score) Add(points int) {
+func (s *Level) Add(points int) {
 	s.Value += points
 }
 
-func (s *Score) Reset() {
+func (s *Level) Reset() {
 	s.Value = 0
 }
 
-func (s *Score) Draw(screen *ebiten.Image) {
-	scoreText := fmt.Sprintf("Score: %d", s.Value)
+func (s *Level) Draw(screen *ebiten.Image) {
+	scoreText := fmt.Sprintf("Level: %d", s.Value)
 
 	background := ebiten.NewImage(120, 40)
 	background.Fill(color.RGBA{0, 0, 0, 180})
