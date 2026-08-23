@@ -149,20 +149,49 @@ func (g *Game) Update() error {
 	}
 	for _, sword := range g.multiSwordAttack {
 		sword.Update(g.blocks)
-		// Sword Collision with Enemy
-		for _, enemy := range g.enemies {
-			if enemy.Alive && sword.Active && Collides(enemy.CollisionBounds(), sword.CollisionBounds()) {
+		if sword.Active {
+			if g.damageEnemiesInBounds(sword.CollisionBounds(), false) {
 				sword.Active = false
-				if enemy.TakeDamage(1) {
-					g.score.Add(1)
-				}
 			}
 		}
 	}
 
+	beamThickness := float64(g.mirrorGame.BeamSprite.Bounds().Dx()) * 0.2
+
+	g.checkBeamCollisions(g.beamAttack.BeamNodes, beamThickness)
+	g.checkBeamCollisions(g.mirrorGame.BeamNodes, beamThickness)
+
 	g.health.Update(g.player.Health)
 
 	return nil
+}
+
+func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool) (hitSomething bool) {
+	for _, enemy := range g.enemies {
+		if enemy.Alive && Collides(bounds, enemy.CollisionBounds()) {
+			hitSomething = true
+
+			if enemy.TakeDamage(1) {
+				g.score.Add(1)
+			}
+
+			// If the attack doesn't pierce (sword), stop checking other enemies
+			if !pierce {
+				break
+			}
+		}
+	}
+	return hitSomething
+}
+
+func (g *Game) checkBeamCollisions(nodes []Vector2, thickness float64) {
+	for i := 0; i < len(nodes)-1; i++ {
+		A := nodes[i]
+		B := nodes[i+1]
+		
+		bounds := BeamSegmentBounds(A, B, thickness)
+		g.damageEnemiesInBounds(bounds, true)
+	}
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {

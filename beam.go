@@ -202,3 +202,33 @@ func rayIntersectsSegment(O, D, A, B Vector2) (bool, float64, Vector2) {
 	
 	return false, 0, Vector2{}
 }
+
+func BeamSegmentBounds(A, B Vector2, thickness float64) Vector4 {
+	// Find the angle of the beam segment
+	angle := math.Atan2(B.Y-A.Y, B.X-A.X)
+
+	// Calculate the perpendicular offset based on the thickness
+	// This vector points 90 degrees outward from the line
+	halfThick := thickness / 2.0
+	pX := -math.Sin(angle) * halfThick
+	pY := math.Cos(angle) * halfThick
+
+	// Find the 4 physical corners of this segment
+	c1x, c1y := A.X+pX, A.Y+pY
+	c2x, c2y := A.X-pX, A.Y-pY
+	c3x, c3y := B.X+pX, B.Y+pY
+	c4x, c4y := B.X-pX, B.Y-pY
+
+	// Find the absolute Minimums and Maximums to form the box
+	minX := math.Min(math.Min(c1x, c2x), math.Min(c3x, c4x))
+	minY := math.Min(math.Min(c1y, c2y), math.Min(c3y, c4y))
+	maxX := math.Max(math.Max(c1x, c2x), math.Max(c3x, c4x))
+	maxY := math.Max(math.Max(c1y, c2y), math.Max(c3y, c4y))
+
+	return Vector4{
+		X1: minX,
+		Y1: minY,
+		X2: maxX,
+		Y2: maxY,
+	}
+}
