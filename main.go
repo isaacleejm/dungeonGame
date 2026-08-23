@@ -15,6 +15,14 @@ import (
 const MAX_SWORDS int = 10
 const MAX_ENEMIES int = 50
 
+type GameState int
+
+const (
+	Playing GameState = iota
+	Paused
+	GameOver
+)
+
 type Game struct {
 	input                  *InputManager
 	player                 *Player
@@ -35,6 +43,7 @@ type Game struct {
 	multiSwordAttack [MAX_SWORDS]*Sword
 	score            *Score
 	health           *Health
+	state            GameState
 }
 
 var backgroundList = []color.RGBA{
@@ -162,7 +171,22 @@ func (g *Game) Update() error {
 
 	for _, enemy := range g.enemies {
 		enemy.Update(g.player, g.blocks)
+
+		var playerCollision Vector4
+		switch g.player.SpellState {
+		case MirrorState:
+			playerCollision = g.player.CollisionBoundsMirror()
+		case SwordState:
+			playerCollision = g.player.CollisionBoundsSword()
+		}
+
+		if Collides(playerCollision, enemy.CollisionBounds()) {
+			if g.health.Hit(0.05) {
+				g.state = GameOver
+			}
+		}
 	}
+
 	for _, sword := range g.multiSwordAttack {
 		sword.Update(g.blocks)
 		if sword.Active {
@@ -188,8 +212,6 @@ func (g *Game) Update() error {
 
 	g.checkBeamCollisions(g.beamAttack.BeamNodes, beamThickness)
 	g.checkBeamCollisions(g.mirrorGame.BeamNodes, beamThickness)
-
-	g.health.Update(g.player.Health)
 
 	return nil
 }
@@ -408,7 +430,7 @@ func main() {
 			gameFace,
 		),
 		health: NewHealth(
-			player.Health,
+			5,
 			Vector2{X: 0, Y: 0},
 			fontSource,
 			gameFace,

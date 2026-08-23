@@ -20,7 +20,6 @@ type Player struct {
 	MirrorSprite *ebiten.Image
 	SwordSprite  *ebiten.Image
 	SpellState   SpellState
-	Health       int
 }
 
 func NewPlayer(
@@ -39,7 +38,6 @@ func NewPlayer(
 		Speed:        speed,
 		MirrorSprite: mirrorSprite,
 		SwordSprite:  swordSprite,
-		Health:       5,
 	}
 
 	return player
