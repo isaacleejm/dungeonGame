@@ -151,7 +151,7 @@ func (g *Game) Update() error {
 	for _, sword := range g.multiSwordAttack {
 		sword.Update(g.blocks)
 		if sword.Active {
-			if g.damageEnemiesInBounds(sword.CollisionBounds(), false) {
+			if g.damageEnemiesInBounds(sword.CollisionBounds(), false, 1) {
 				sword.Active = false
 			}
 		}
@@ -167,12 +167,12 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool) (hitSomething bool) {
+func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool, damage float64) (hitSomething bool) {
 	for _, enemy := range g.enemies {
 		if enemy.Alive && Collides(bounds, enemy.CollisionBounds()) {
 			hitSomething = true
 
-			if enemy.TakeDamage(1) {
+			if enemy.TakeDamage(damage) {
 				g.score.Add(1)
 			}
 
@@ -191,7 +191,7 @@ func (g *Game) checkBeamCollisions(nodes []Vector2, thickness float64) {
 		B := nodes[i+1]
 		
 		bounds := BeamSegmentBounds(A, B, thickness)
-		g.damageEnemiesInBounds(bounds, true)
+		g.damageEnemiesInBounds(bounds, true, 0.05)
 	}
 }
 
@@ -308,10 +308,18 @@ func main() {
 	}
 
 	enemies := [MAX_ENEMIES]*Enemy{}
-	enemyHealth := 5
+	var enemyHealth float64 = 5
 	enemySpeed := 1.0
 	for i := range enemies {
-		enemies[i] = NewEnemy(screenWidthValue, screenHeightValue, enemySpeed, enemySprite, player, true, enemyHealth)
+		enemies[i] = NewEnemy(
+			screenWidthValue,
+			screenHeightValue,
+			enemySpeed,
+			enemySprite,
+			player,
+			true,
+			enemyHealth,
+		)
 	}
 
 	currentLevel := BlocksFromLayout(
