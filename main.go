@@ -93,9 +93,21 @@ func (g *Game) UpdateLevel() {
 
 func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
+
 	if g.state == GameOver && inputState.ToggleSpell {
 		g.state = Playing
 		g.health.Value = 5
+		return nil
+	}
+
+	if inputState.TogglePause {
+		switch g.state {
+			case Paused:
+				g.state = Playing
+			case Playing:
+				g.state = Paused
+		}
+		return nil
 	}
 
 	g.player.Update(inputState, g.blocks)
@@ -268,6 +280,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.state {
 	case GameOver:
 		text.Draw(screen, "Game Over", g.gameFace, nil)
+		return
+	case Paused:
+		text.Draw(screen, "Paused", g.gameFace, nil)		
 		return
 	}
 
