@@ -75,6 +75,8 @@ func (g *Game) UpdateLevel() {
 
 	g.blocks = currentLevel.Blocks
 	g.background = currentLevel.Background
+
+	g.player.Pos = Vector2{80, 80}
 }
 
 func (g *Game) Update() error {
@@ -195,6 +197,16 @@ func (g *Game) damageEnemiesInBounds(bounds Vector4, pierce bool) (hitSomething 
 
 			if enemy.TakeDamage(1) {
 				g.score.Add(1)
+
+				if g.score.Value >= levelScoreThresholds[g.layoutIndex] {
+					g.layoutIndex++
+
+					if g.layoutIndex >= len(layoutList) {
+						g.layoutIndex = 0
+					}
+
+					g.UpdateLevel()
+				}
 			}
 
 			// If the attack doesn't pierce (sword), stop checking other enemies
