@@ -19,7 +19,7 @@ type Game struct {
 	input                  *InputManager
 	player                 *Player
 	enemies                [MAX_ENEMIES]*Enemy
-	mirrorGame             MirrorGame
+	mirrorGame             MirrorManager
 	beamAttack             BeamAttack
 	multiSwordAttackSprite *ebiten.Image
 	blocks                 []*Block
