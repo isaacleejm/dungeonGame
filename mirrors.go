@@ -179,42 +179,7 @@ func (m *MirrorGame) Cast(center Vector2, theta float64, blocks []*Block) {
 func (m *MirrorGame) Draw(screen *ebiten.Image) {
 	// Draw beams first so they appear to strike the surface of the mirrors
 	if len(m.BeamNodes) >= 2 {
-		beamBounds := m.BeamSprite.Bounds()
-		beamWidth := float64(beamBounds.Dx())
-		beamHeight := float64(beamBounds.Dy())
-
-		for i := 0; i < len(m.BeamNodes)-1; i++ {
-			A := m.BeamNodes[i]
-			B := m.BeamNodes[i+1]
-
-			// Calculate distance and angle between the two nodes
-			dx := B.X - A.X
-			dy := B.Y - A.Y
-			dist := math.Hypot(dx, dy)
-			angle := math.Atan2(dy, dx)
-
-			// How much we need to stretch the sprite horizontally to reach point B
-			scaleX := dist / beamWidth
-
-			op := &ebiten.DrawImageOptions{}
-
-			// Offset Y by half height so the beam rotates exactly on its center line
-			op.GeoM.Translate(0, -beamHeight/2)
-
-			// Stretch the beam horizontally to the exact distance
-			op.GeoM.Scale(scaleX, 0.2)
-
-			// Rotate to face the next mirror
-			op.GeoM.Rotate(angle)
-
-			// Move to the start point (Mirror A)
-			op.GeoM.Translate(A.X, A.Y)
-
-			// Additive blending makes energy beams glow nicely when they overlap
-			op.Blend = ebiten.BlendLighter
-
-			screen.DrawImage(m.BeamSprite, op)
-		}
+		DrawBeamPath(screen, m.BeamSprite, m.BeamNodes, 0.2)
 	}
 
 	for _, mirror := range m.Mirrors {

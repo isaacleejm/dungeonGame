@@ -72,7 +72,13 @@ func (g *Game) Update() error {
 	inputState := g.input.Poll(g.player.Center())
 	g.player.Update(inputState, g.blocks)
 
-	g.beamAttack.Update(g.player.SpellState, inputState, g.player.Center(), g.player.Rotation)
+	g.beamAttack.Update(
+		g.player.SpellState,
+		inputState,
+		g.player.Center(),
+		g.player.Rotation,
+		g.mirrorGame.Mirrors,
+	)
 
 	if inputState.StartArrayAttack {
 		switch g.player.SpellState {
