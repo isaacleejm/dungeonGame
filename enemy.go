@@ -14,10 +14,18 @@ type Enemy struct {
 	Sprite    *ebiten.Image
 	Alive     bool
 	Collision Vector4
-	Health    int
+	Health    float64
 }
 
-func NewEnemy(screenWidth, screenHeight int, speed float64, sprite *ebiten.Image, player *Player, alive bool, health int, blocks []*Block) *Enemy {
+func NewEnemy(
+	screenWidth, screenHeight int,
+	speed float64,
+	sprite *ebiten.Image,
+	player *Player,
+	alive bool,
+	health float64,
+	blocks []*Block,
+) *Enemy {
 	enemyBounds := sprite.Bounds()
 
 	enemyWidth := float64(enemyBounds.Dx())
@@ -129,7 +137,6 @@ func (e *Enemy) Respawn(screenWidth int, screenHeight int, player *Player, block
 }
 
 func (e *Enemy) Update(p *Player, blocks []*Block) {
-
 	if e.Health <= 0 {
 		e.Alive = false
 	}
@@ -166,7 +173,7 @@ func (e *Enemy) Update(p *Player, blocks []*Block) {
 	}
 }
 
-func (e *Enemy) TakeDamage(damage int) bool {
+func (e *Enemy) TakeDamage(damage float64) bool {
 	if !e.Alive {
 		return false
 	}

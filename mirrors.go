@@ -42,7 +42,7 @@ const (
 	staggerOffset = spacing / 2.0
 )
 
-type MirrorGame struct {
+type MirrorManager struct {
 	Mirrors []Mirror
 	BeamNodes  []Vector2
 	BeamState BeamState
@@ -51,11 +51,11 @@ type MirrorGame struct {
 	BeamSprite *ebiten.Image
 }
 
-func NewMirrorGame(beamSprite *ebiten.Image) MirrorGame {
+func NewMirrorGame(beamSprite *ebiten.Image) MirrorManager {
 	mirrorImage := ebiten.NewImage(mirrorWidth, mirrorThickness)
 	mirrorImage.Fill(color.RGBA{R: 148, G: 226, B: 213, A: 255})
 
-	return MirrorGame{
+	return MirrorManager{
 		Sprite: mirrorImage,
 		BeamSprite: beamSprite,
 	}
@@ -75,7 +75,7 @@ func (m *Mirror) CollisionBounds() Vector4 {
 	}
 }
 
-func (m *MirrorGame) Update() {
+func (m *MirrorManager) Update() {
 	if m.BeamState == ActiveBeam && m.TimerTicks > 0 {
 		m.TimerTicks--
 
@@ -87,7 +87,11 @@ func (m *MirrorGame) Update() {
 }
 
 /// Parameters come from the Player
-func (m *MirrorGame) Cast(center Vector2, theta float64, blocks []*Block) {
+func (m *MirrorManager) Cast(center Vector2, theta float64, blocks []*Block) {
+	if m.BeamState == ActiveBeam {
+		return
+	}
+
 	// Clear previous mirrors (todo: replace old ones gradually)
 	m.Mirrors = make([]Mirror, 0)
 
@@ -176,7 +180,7 @@ func (m *MirrorGame) Cast(center Vector2, theta float64, blocks []*Block) {
 	m.BeamState = ActiveBeam
 }
 
-func (m *MirrorGame) Draw(screen *ebiten.Image) {
+func (m *MirrorManager) Draw(screen *ebiten.Image) {
 	// Draw beams first so they appear to strike the surface of the mirrors
 	if len(m.BeamNodes) >= 2 {
 		DrawBeamPath(screen, m.BeamSprite, m.BeamNodes, 0.2)

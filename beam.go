@@ -32,6 +32,7 @@ func (sa *BeamAttack) Update(
 	playerPos Vector2,
 	playerRotation float64,
 	mirrors []Mirror,
+	blocks []*Block,
 ) {
 	sa.spellState = spellState
 	if spellState == MirrorState {
@@ -76,6 +77,7 @@ func (sa *BeamAttack) Update(
 			var closestMirror *Mirror
 			minT := math.MaxFloat64
 			var closestHit Vector2
+			hitBlock := false
 
 			// Find the closest mirror intersection
 			for i := range mirrors {
@@ -96,8 +98,24 @@ func (sa *BeamAttack) Update(
 				}
 			}
 
+			// Find the closest block intersection
+			for _, block := range blocks {
+				hit, t, hitPos := rayIntersectsBox(currentO, currentD, block.CollisionBounds())
+				// If the block is closer than the closest mirror (t < minT), it intercepts!
+				if hit && t < minT {
+					minT = t
+					closestHit = hitPos
+					closestMirror = nil // Invalidate the mirror hit
+					hitBlock = true
+				}
+			}
+
 			// Handle the hit
-			if closestMirror != nil {
+			if hitBlock {
+				// Hit block, stop bouncing
+				sa.BeamNodes = append(sa.BeamNodes, closestHit)
+				break
+			} else if closestMirror != nil {
 				sa.BeamNodes = append(sa.BeamNodes, closestHit)
 
 				// Calculate mirror normal vector (perpendicular to its rotation)
@@ -201,6 +219,32 @@ func rayIntersectsSegment(O, D, A, B Vector2) (bool, float64, Vector2) {
 	}
 	
 	return false, 0, Vector2{}
+}
+
+// Check a ray against the 4 edges of a Vector4 bounding box
+func rayIntersectsBox(O, D Vector2, box Vector4) (bool, float64, Vector2) {
+	// Define the 4 line segments that make up the bounding box
+	segments := [4][2]Vector2{
+		{{X: box.X1, Y: box.Y1}, {X: box.X2, Y: box.Y1}}, // Top
+		{{X: box.X2, Y: box.Y1}, {X: box.X2, Y: box.Y2}}, // Right
+		{{X: box.X2, Y: box.Y2}, {X: box.X1, Y: box.Y2}}, // Bottom
+		{{X: box.X1, Y: box.Y2}, {X: box.X1, Y: box.Y1}}, // Left
+	}
+
+	minT := math.MaxFloat64
+	var closestHit Vector2
+	hitAnything := false
+
+	for _, seg := range segments {
+		hit, t, hitPos := rayIntersectsSegment(O, D, seg[0], seg[1])
+		if hit && t < minT {
+			minT = t
+			closestHit = hitPos
+			hitAnything = true
+		}
+	}
+
+	return hitAnything, minT, closestHit
 }
 
 func BeamSegmentBounds(A, B Vector2, thickness float64) Vector4 {
